@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.activity.manage.mapper.AdminMapper">
+    <select id="loginById" parameterType="com.activity.manage.pojo.entity.Administrator"
+            resultType="com.activity.manage.pojo.entity.Administrator">
+        select * from administrator
+        <where>
+            id = #{id} and user_password = #{userPassword}
+        </where>
+    </select>
+    <select id="loginByName" parameterType="com.activity.manage.pojo.entity.Administrator"
+            resultType="com.activity.manage.pojo.entity.Administrator">
+        select * from administrator
+        <where>
+            user_name = #{userName) and user_password = #{userPassword}
+        </where>
+    </select>
+</mapper>
