@@ -8,4 +8,8 @@ public interface AdminMapper {
     Administrator loginById(Administrator administrator);
 
     Administrator loginByName(Administrator administrator);
+
+    Administrator queryById(Administrator administratorOld);
+
+    void update(Administrator administratorNew);
 }

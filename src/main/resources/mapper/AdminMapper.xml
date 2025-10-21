@@ -13,7 +13,34 @@
             resultType="com.activity.manage.pojo.entity.Administrator">
         select * from administrator
         <where>
-            user_name = #{userName) and user_password = #{userPassword}
+            user_name = #{userName} and user_password = #{userPassword}
         </where>
     </select>
+    <select id="queryById" parameterType="com.activity.manage.pojo.entity.Administrator"
+            resultType="com.activity.manage.pojo.entity.Administrator">
+        select * from administrator
+        <where>
+            id = #{id}
+            <if test="userName != null">
+                and user_name = #{userName}
+            </if>
+            <if test="userPassword != null">
+                and user_password = #{userPassword}
+            </if>
+        </where>
+    </select>
+    <update id="update" parameterType="com.activity.manage.pojo.entity.Administrator">
+        update administrator
+        <set>
+            <if test="userName != null">
+                user_name = #{userName},
+            </if>
+            <if test="userPassword != null">
+                user_password = #{userPassword},
+            </if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
 </mapper>
