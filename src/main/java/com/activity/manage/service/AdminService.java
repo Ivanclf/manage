@@ -46,7 +46,7 @@ public class AdminService {
                 CopyOptions.create().setIgnoreNullValue(true).setFieldValueEditor((fieldName, fieldValue) -> fieldValue.toString()));
         stringRedisTemplate.opsForHash().putAll(tokenKey, adminMap);
         stringRedisTemplate.expire(tokenKey, LOGIN_CODE_TTL, TimeUnit.MINUTES);
-        log.info("用户" + token + "登录成功");
+        log.info("用户 " + token + " 登录成功");
         return token;
     }
 }
