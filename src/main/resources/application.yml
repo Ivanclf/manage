@@ -33,8 +33,4 @@ mybatis:
     map-underscore-to-camel-case: true
 logging:
   level:
-    #    com.homework.reservation.mapper: DEBUG
-    #    org.mybatis: DEBUG
-    #    org.apache.ibatis: TRACE\
-    org.springframework.data.redis: DEBUG
     com.activity.manage: debug
