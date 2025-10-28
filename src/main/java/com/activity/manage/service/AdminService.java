@@ -33,9 +33,11 @@ public class AdminService {
     private StringRedisTemplate stringRedisTemplate;
 
     public String login(Administrator administrator) {
+        // 校验完整性
         if(administrator.getUserPassword().isEmpty()) {
             return null;
         }
+        // 检查用户通过什么方式登录
         Administrator admin = null;
         if(administrator.getId() != null) {
             admin = adminMapper.loginById(administrator);
@@ -45,6 +47,7 @@ public class AdminService {
         if(admin == null) {
             return null;
         }
+        // 登录成功，获取token，放到redis中。redis的键为token，值为用户的id和账号
         String token = UUID.randomUUID().toString(true);
         String tokenKey = LOGIN_ADMIN_KEY + token;
         AdministratorDTO administratorDTO = BeanUtil.copyProperties(administrator, AdministratorDTO.class);
@@ -54,6 +57,7 @@ public class AdminService {
         stringRedisTemplate.opsForHash().putAll(tokenKey, adminMap);
         stringRedisTemplate.expire(tokenKey, LOGIN_CODE_TTL, TimeUnit.MINUTES);
         log.info("用户 " + token + " 登录成功");
+        // 返回token给前端
         return token;
     }
 
@@ -69,13 +73,16 @@ public class AdminService {
     }
 
     public Result updatePassword(AdministratorPasswordDTO administratorPasswordDTO) {
+        // 从redis中获取用户信息
         AdministratorDTO administratorDTO = TokenUtil.getAdminFromRequest(stringRedisTemplate);
         Administrator administratorOld = BeanUtil.copyProperties(administratorDTO, Administrator.class);
         administratorOld.setUserPassword(administratorPasswordDTO.getOldPassword());
+        // 查看旧密码有没有输入正确
         Administrator administratorNew = adminMapper.queryById(administratorOld);
         if(administratorNew == null) {
             return Result.error("旧密码输入错误");
         }
+        // 输入正确，更新密码
         administratorNew.setUserPassword(administratorPasswordDTO.getNewPassword());
         adminMapper.update(administratorNew);
         return Result.success();

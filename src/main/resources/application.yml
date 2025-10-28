@@ -26,6 +26,17 @@ spring:
           max-idle: 10
           min-idle: 1
           time-between-eviction-runs: 10s
+  rabbitmq:
+    host: ${spring.rabbitmq.host}
+    port: ${spring.rabbitmq.port}
+    username: ${spring.rabbitmq.username}
+    password: ${spring.rabbitmq.password}
+    listener:
+      simple:
+        prefetch: 10
+        concurrency: 5
+        max-concurrency: 10
+    virtual-host: ${spring.rabbitmq.virtual-host}
 mybatis:
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: com.activity.manage.pojo.entity

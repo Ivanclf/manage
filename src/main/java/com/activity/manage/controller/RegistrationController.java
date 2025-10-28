@@ -1,7 +1,10 @@
 package com.activity.manage.controller;
 
+import com.activity.manage.pojo.dto.RegistrationDTO;
 import com.activity.manage.service.QRCodeService;
-import com.activity.manage.utils.QRCodeUtil;
+import com.activity.manage.service.RegistrationService;
+import com.activity.manage.utils.RegexUtils;
+import com.activity.manage.utils.result.Result;
 import com.google.zxing.WriterException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +24,8 @@ import static com.activity.manage.utils.constant.QRCodeConstant.*;
 public class RegistrationController {
     @Autowired
     private QRCodeService qrCodeService;
+    @Autowired
+    private RegistrationService registrationService;
 
     /**
      * 生成活动报名二维码
@@ -54,5 +59,13 @@ public class RegistrationController {
                                             @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int height) throws WriterException, IOException {
         String content = CHECKIN_PAGE;
         return qrCodeService.generateQRCode(content, width, height);
+    }
+
+    @PostMapping()
+    public Result registration(@RequestBody RegistrationDTO registrationDTO) {
+        if(!RegexUtils.isPhoneValid(registrationDTO.getPhone())) {
+            return Result.error("输入的电话号不正确");
+        }
+        return registrationService.registration(registrationDTO);
     }
 }

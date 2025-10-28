@@ -14,11 +14,17 @@ import java.io.Serializable;
 public class Administrator implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    // 管理员id
+    /**
+     * 管理员id
+     */
     private Integer id;
-    // 管理员账号
+    /**
+     * 管理员账号
+     */
     private String userName;
-    // 管理员密码（MD5加密）
+    /**
+     * 管理员密码
+     */
     private String userPassword;
 
 }
