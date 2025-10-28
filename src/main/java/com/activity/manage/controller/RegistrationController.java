@@ -1,6 +1,7 @@
 package com.activity.manage.controller;
 
 import com.activity.manage.pojo.dto.RegistrationDTO;
+import com.activity.manage.pojo.vo.Activity2RegisterVO;
 import com.activity.manage.service.QRCodeService;
 import com.activity.manage.service.RegistrationService;
 import com.activity.manage.utils.RegexUtils;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import java.io.IOException;
+import java.util.List;
 
 import static com.activity.manage.utils.constant.QRCodeConstant.*;
 
@@ -61,11 +63,30 @@ public class RegistrationController {
         return qrCodeService.generateQRCode(content, width, height);
     }
 
-    @PostMapping()
+    /**
+     * 报名表单提交
+     * @param registrationDTO
+     * @return
+     */
+    @PostMapping
     public Result registration(@RequestBody RegistrationDTO registrationDTO) {
         if(!RegexUtils.isPhoneValid(registrationDTO.getPhone())) {
             return Result.error("输入的电话号不正确");
         }
         return registrationService.registration(registrationDTO);
+    }
+
+    /**
+     * 用户查看报名信息
+     * @param phone
+     * @return
+     */
+    @GetMapping
+    public Result<List<Activity2RegisterVO>> queryRegistrationInfo(@RequestParam("phone") String phone) {
+        if(!RegexUtils.isPhoneValid(phone)) {
+            return Result.error("错误的手机格式");
+        }
+        // TODO 完成相关service中封装类和批量查询的功能
+        return Result.success();
     }
 }
