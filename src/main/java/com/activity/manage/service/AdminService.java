@@ -8,6 +8,7 @@ import cn.hutool.core.util.StrUtil;
 import com.activity.manage.mapper.AdminMapper;
 import com.activity.manage.pojo.dto.AdministratorDTO;
 import com.activity.manage.pojo.dto.AdministratorPasswordDTO;
+import com.activity.manage.pojo.dto.AdministratorUsernameDTO;
 import com.activity.manage.pojo.entity.Administrator;
 import com.activity.manage.utils.AdminHolder;
 import com.activity.manage.utils.result.Result;
@@ -86,5 +87,23 @@ public class AdminService {
         administratorNew.setUserPassword(administratorPasswordDTO.getNewPassword());
         adminMapper.update(administratorNew);
         return Result.success();
+    }
+
+    public void updateName(AdministratorUsernameDTO administratorUsernameDTO) {
+        // 从redis里获取用户信息
+        String token = LOGIN_ADMIN_KEY + TokenUtil.getTokenFromRequest();
+        AdministratorDTO administratorDTO = TokenUtil.getAdminFromToken(token, stringRedisTemplate);
+        if(administratorDTO == null) {
+            return;
+        }
+        // 更改信息，更新数据库数据
+        administratorDTO.setUserName(administratorUsernameDTO.getUserName());
+        Administrator administrator = BeanUtil.copyProperties(administratorDTO, Administrator.class);
+        adminMapper.update(administrator);
+        // 写回redis
+        Map<String, Object> adminMap = BeanUtil.beanToMap(administratorDTO, new HashMap<>(),
+                CopyOptions.create().setIgnoreNullValue(true).setFieldValueEditor(
+                        (fieldName, fieldValue) -> fieldValue.toString()));
+        stringRedisTemplate.opsForHash().putAll(token, adminMap);
     }
 }

@@ -25,7 +25,7 @@ public class AdminController {
     @PostMapping("/login")
     public Result<String> login(@RequestBody Administrator administrator) {
         var token = adminService.login(administrator);
-        if(!token.isEmpty()) {
+        if(token != null && !token.isEmpty()) {
             return Result.success(token);
         } else {
             return Result.error("账号或密码错误");
@@ -68,7 +68,10 @@ public class AdminController {
      */
     @PutMapping("/username")
     public Result username(@RequestBody AdministratorUsernameDTO administratorUsernameDTO) {
-        // TODO 实现改账号功能
+        if(administratorUsernameDTO.getUserName() == null || administratorUsernameDTO.getUserName().isEmpty()) {
+            return Result.error("用户名不能为空");
+        }
+        adminService.updateName(administratorUsernameDTO);
         return Result.success();
     }
 }

@@ -44,8 +44,7 @@ public class TokenUtil {
         if (StrUtil.isBlank(token)) {
             return null;
         }
-        String key = LOGIN_ADMIN_KEY + token;
-        Map<Object, Object> adminMap = stringRedisTemplate.opsForHash().entries(key);
+        Map<Object, Object> adminMap = stringRedisTemplate.opsForHash().entries(token);
         if (adminMap == null || adminMap.isEmpty()) {
             return null;
         }
