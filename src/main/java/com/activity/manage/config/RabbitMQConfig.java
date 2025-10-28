@@ -1,6 +1,5 @@
 package com.activity.manage.config;
 
-import com.activity.manage.utils.constant.RabbitMQConstant;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -13,6 +12,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.activity.manage.utils.constant.RabbitMQConstant.CHECKIN_QUEUE;
 import static com.activity.manage.utils.constant.RabbitMQConstant.REGISTRATION_QUEUE;
 
 @Slf4j
@@ -48,6 +48,15 @@ public class RabbitMQConfig {
     }
 
     /**
+     * 获取所有签到队列名称
+     */
+    public Set<String> getCheckinQueues() {
+        return activeActivityIds.stream()
+                .map(id -> id + CHECKIN_QUEUE)
+                .collect(Collectors.toSet());
+    }
+
+    /**
      * 动态定义多个队列 Bean
      */
     @Bean
@@ -59,13 +68,34 @@ public class RabbitMQConfig {
     }
 
     /**
+     * 动态定义签到队列 Bean
+     */
+    @Bean
+    public Set<Queue> checkinQueues() {
+        log.info("获取签到信息队列中...");
+        return activeActivityIds.stream()
+                .map(id -> new Queue(id + CHECKIN_QUEUE, true))
+                .collect(Collectors.toSet());
+    }
+
+    /**
      * 移除活动ID并删除对应队列
      */
     public void removeActivityId(Long activityId) {
         activeActivityIds.remove(activityId);
         String queueName = activityId + REGISTRATION_QUEUE;
-        rabbitAdmin.deleteQueue(queueName);
-        log.info("已删除活动ID为 {} 的队列: {}", activityId, queueName);
+        try {
+            rabbitAdmin.deleteQueue(queueName);
+        } catch (Exception e) {
+            log.warn("删除注册队列 {} 时发生错误（忽略）: {}", queueName, e.getMessage());
+        }
+        String checkinQueue = activityId + CHECKIN_QUEUE;
+        try {
+            rabbitAdmin.deleteQueue(checkinQueue);
+        } catch (Exception e) {
+            log.warn("删除签到队列 {} 时发生错误（忽略）: {}", checkinQueue, e.getMessage());
+        }
+        log.info("已尝试删除活动ID为 {} 的队列: {} , {}", activityId, queueName, checkinQueue);
     }
 
 }

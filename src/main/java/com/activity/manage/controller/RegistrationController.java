@@ -1,5 +1,7 @@
 package com.activity.manage.controller;
 
+import cn.hutool.core.util.ObjectUtil;
+import com.activity.manage.pojo.dto.CheckinDTO;
 import com.activity.manage.pojo.dto.RegistrationDTO;
 import com.activity.manage.pojo.vo.Activity2RegisterVO;
 import com.activity.manage.service.QRCodeService;
@@ -88,5 +90,13 @@ public class RegistrationController {
         }
         // TODO 完成相关service中封装类和批量查询的功能
         return Result.success();
+    }
+
+    @PostMapping("/checkin")
+    public Result checkinConfirm(@RequestBody CheckinDTO checkinDTO) {
+        if(ObjectUtil.hasEmpty(checkinDTO.getId(), checkinDTO.getPhone(), checkinDTO.getLatitude(), checkinDTO.getLongitude())) {
+            return Result.error("未提交完整数据");
+        }
+        return registrationService.checkinConfirm(checkinDTO);
     }
 }

@@ -1,8 +1,9 @@
-package com.activity.manage.utils;
+package com.activity.manage.utils.interceptor;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.activity.manage.pojo.dto.AdministratorDTO;
+import com.activity.manage.utils.AdminHolder;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.data.redis.core.StringRedisTemplate;

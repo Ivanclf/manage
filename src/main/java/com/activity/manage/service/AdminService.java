@@ -4,26 +4,25 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.StrUtil;
-
 import com.activity.manage.mapper.AdminMapper;
 import com.activity.manage.pojo.dto.AdministratorDTO;
 import com.activity.manage.pojo.dto.AdministratorPasswordDTO;
 import com.activity.manage.pojo.dto.AdministratorUsernameDTO;
 import com.activity.manage.pojo.entity.Administrator;
 import com.activity.manage.utils.AdminHolder;
+import com.activity.manage.utils.TokenUtil;
 import com.activity.manage.utils.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import com.activity.manage.utils.TokenUtil;
-
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static com.activity.manage.utils.constant.RedisConstant.*;
+import static com.activity.manage.utils.constant.RedisConstant.LOGIN_ADMIN_KEY;
+import static com.activity.manage.utils.constant.RedisConstant.LOGIN_CODE_TTL;
 
 @Service
 @Slf4j

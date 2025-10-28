@@ -10,8 +10,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Map;
 
-import static com.activity.manage.utils.constant.RedisConstant.LOGIN_ADMIN_KEY;
-
 /**
  * Token 相关工具方法
  */

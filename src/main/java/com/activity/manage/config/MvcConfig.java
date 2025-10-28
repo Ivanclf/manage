@@ -1,7 +1,7 @@
 package com.activity.manage.config;
 
-import com.activity.manage.utils.LoginInterceptor;
-import com.activity.manage.utils.RefreshTokenInterceptor;
+import com.activity.manage.utils.interceptor.LoginInterceptor;
+import com.activity.manage.utils.interceptor.RefreshTokenInterceptor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;

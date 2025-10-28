@@ -52,4 +52,7 @@
             </if>
         </trim>
     </insert>
+    <update id="checkin" parameterType="com.activity.manage.pojo.entity.Registration">
+        update registration set checkin = 1 where activity_id = #{id} and phone = #{phone}
+    </update>
 </mapper>

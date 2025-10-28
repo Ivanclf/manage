@@ -1,6 +1,5 @@
 package com.activity.manage.controller;
 
-import com.activity.manage.pojo.dto.AdministratorDTO;
 import com.activity.manage.pojo.dto.AdministratorPasswordDTO;
 import com.activity.manage.pojo.dto.AdministratorUsernameDTO;
 import com.activity.manage.pojo.entity.Administrator;

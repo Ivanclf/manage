@@ -3,6 +3,7 @@ package com.activity.manage.service;
 import cn.hutool.core.bean.BeanUtil;
 import com.activity.manage.config.RabbitMQConfig;
 import com.activity.manage.mapper.RegistrationMapper;
+import com.activity.manage.pojo.dto.CheckinDTO;
 import com.activity.manage.pojo.dto.RegistrationDTO;
 import com.activity.manage.pojo.entity.Registration;
 import com.activity.manage.utils.result.Result;
@@ -11,14 +12,19 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.geo.Point;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.Objects;
 
+import static com.activity.manage.utils.constant.RabbitMQConstant.CHECKIN_QUEUE;
 import static com.activity.manage.utils.constant.RabbitMQConstant.REGISTRATION_QUEUE;
+import static com.activity.manage.utils.constant.RedisConstant.CHECKIN_LOCATION_KEY;
+import static com.activity.manage.utils.constant.RedisConstant.CHECKIN_USER_KEY;
 
 @Service
 @Slf4j
@@ -80,5 +86,62 @@ public class RegistrationService {
         registration.setRegistrationTime(LocalDateTime.now());
         registration.setCheckin(0);
         registrationMapper.insert(registration);
+    }
+
+    public Result checkinConfirm(CheckinDTO checkinDTO) {
+        Long activityId = checkinDTO.getId();
+        String key = CHECKIN_USER_KEY + activityId.toString();
+        String phone = checkinDTO.getPhone();
+        Boolean isMember = stringRedisTemplate.opsForSet().isMember(key, phone);
+        if(isMember == null || !isMember) {
+            return Result.error("该用户没有该活动的报名信息");
+        }
+
+        // 获取坐标信息进行匹配
+        double latitude = checkinDTO.getLatitude().doubleValue();
+        double longitude = checkinDTO.getLongitude().doubleValue();
+        Point point = new Point(longitude, latitude);
+        stringRedisTemplate.opsForGeo().add(CHECKIN_LOCATION_KEY, point, "temp");
+        Double distance;
+        try {
+            distance = Objects.requireNonNull(stringRedisTemplate.opsForGeo()
+                            .distance(CHECKIN_LOCATION_KEY, activityId.toString(), "temp"))
+                    .getValue();
+        } catch (Exception e) {
+            return Result.error("活动尚未开始");
+        }
+
+        if (distance == null) {
+            return Result.error("活动尚未开始");
+        }
+        
+        if (distance > 0.1) {
+            return Result.error("不在签到范围内");
+        }
+        stringRedisTemplate.opsForGeo().remove(CHECKIN_LOCATION_KEY, "temp");
+
+        // 将活动ID记录到配置中以便创建/找到对应队列
+        rabbitMQConfig.addActiveActivityId(activityId);
+        // 将签到信息发送到对应队列，异步处理
+        String queue = activityId + CHECKIN_QUEUE;
+        rabbitTemplate.convertAndSend(queue, checkinDTO);
+        return Result.success();
+    }
+
+    /**
+     * 消费签到队列，执行数据库更新
+     * @param checkinDTO
+     */
+    @RabbitListener(queues = "#{@rabbitMQConfig.checkinQueues}")
+    public void doCheckin(CheckinDTO checkinDTO) {
+        try {
+            Registration registration = new Registration();
+            registration.setActivityId(checkinDTO.getId());
+            registration.setPhone(checkinDTO.getPhone());
+            registration.setCheckin(1);
+            registrationMapper.checkin(registration);
+        } catch (Exception e) {
+            log.error("处理签到消息时发生错误: {}", e.getMessage(), e);
+        }
     }
 }
