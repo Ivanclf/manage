@@ -1,16 +1,20 @@
 package com.activity.manage.service;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.activity.manage.config.AliOssConfig;
+import com.activity.manage.config.RabbitMQConfig;
 import com.activity.manage.mapper.ActivityMapper;
 import com.activity.manage.pojo.dto.ActivityDTO;
 import com.activity.manage.pojo.dto.AdministratorDTO;
 import com.activity.manage.pojo.entity.Activity;
 import com.activity.manage.utils.AdminHolder;
+import com.activity.manage.utils.AliOSSUtil;
 import com.activity.manage.utils.constant.ActivityConstant;
 import com.activity.manage.utils.result.Result;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,11 +24,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import static com.activity.manage.utils.constant.RedisConstant.*;
+
 @Service
 public class ActivityService {
 
     @Autowired
     private ActivityMapper activityMapper;
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    private RabbitMQConfig rabbitMQConfig;
 
     /**
      * 1. 创建活动 (POST /activity)
@@ -58,7 +68,7 @@ public class ActivityService {
      * 2. 查询/搜索活动 (GET /activity)
      */
     public Result<PageInfo<Activity>> searchActivities(String activityName, Integer status, Boolean isFull, String location, int pageNum, int pageSize) {
-        // 1. 启动 PageHelper 分页 (pom.xml 中已包含依赖)
+        // 1. 启动 PageHelper 分页
         PageHelper.startPage(pageNum, pageSize);
 
         // 2. 构造查询参数
@@ -111,7 +121,7 @@ public class ActivityService {
         activityToUpdate.setId(id);
         activityToUpdate.setUpdateTime(LocalDateTime.now());
 
-        // 5. 执行更新 (Mapper.xml 中使用动态SQL，只会更新 DTO 中非 null 的字段)
+        // 5. 执行更新
         activityMapper.update(activityToUpdate);
         return Result.success();
     }
@@ -127,13 +137,19 @@ public class ActivityService {
         if (dbActivity == null) {
             return Result.error("活动不存在");
         }
-
         // 2. 执行删除
         activityMapper.deleteById(id);
 
-        // TODO: 3. 清理相关数据（例如：报名信息、Redis缓存等）
-        // registrationMapper.deleteByActivityId(id);
-        // stringRedisTemplate.delete(REGISTRATION_ACTIVITY_KEY + id);
+        // 3. 清理redis相关数据
+        String registrationKey = REGISTRATION_ACTIVITY_KEY + id;
+        String activityUserKey = CHECKIN_USER_KEY + id;
+        String activityLocationKey = CHECKIN_LOCATION_KEY + id;
+
+        stringRedisTemplate.delete(registrationKey);
+        stringRedisTemplate.delete(activityUserKey);
+        stringRedisTemplate.delete(activityLocationKey);
+
+        // TODO 清除存在OSS里的二维码
 
         return Result.success();
     }

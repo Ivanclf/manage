@@ -29,7 +29,7 @@ public class ActivityController {
     private QRCodeService qrCodeService;
 
     @Autowired
-    private ActivityService activityService; // 注入 ActivityService
+    private ActivityService activityService;
 
     /**
      * 1. 创建活动
@@ -94,7 +94,7 @@ public class ActivityController {
                                             @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int width,
                                             @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int height) throws WriterException, IOException {
         // 优化：二维码内容应指向具体活动，而不仅仅是首页
-        String content = ACTIVITY_PAGE + "activity/detail?id=" + id; // 示例URL，请替换为你的前端路由
+        String content = ACTIVITY_PAGE;
         return qrCodeService.generateQRCode(content, width, height);
     }
 }

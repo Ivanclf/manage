@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,6 +33,7 @@ public class AdminService {
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
+    @Transactional
     public String login(Administrator administrator) {
         // 校验完整性
         if(administrator.getUserPassword().isEmpty()) {
@@ -72,6 +74,7 @@ public class AdminService {
         AdminHolder.removeAdmin();
     }
 
+    @Transactional
     public Result updatePassword(AdministratorPasswordDTO administratorPasswordDTO) {
         // 从redis中获取用户信息
         AdministratorDTO administratorDTO = TokenUtil.getAdminFromRequest(stringRedisTemplate);
@@ -88,6 +91,7 @@ public class AdminService {
         return Result.success();
     }
 
+    @Transactional
     public void updateName(AdministratorUsernameDTO administratorUsernameDTO) {
         // 从redis里获取用户信息
         String token = LOGIN_ADMIN_KEY + TokenUtil.getTokenFromRequest();

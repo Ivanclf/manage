@@ -11,8 +11,6 @@ import java.time.LocalDateTime;
 @Data
 public class ActivityDTO implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-
     /**
      * 活动名称
      */
