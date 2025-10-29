@@ -6,7 +6,7 @@ import com.activity.manage.pojo.dto.RegistrationDTO;
 import com.activity.manage.pojo.vo.Activity2RegisterVO;
 import com.activity.manage.service.QRCodeService;
 import com.activity.manage.service.RegistrationService;
-import com.activity.manage.utils.RegexUtils;
+import com.activity.manage.utils.RegexUtil;
 import com.activity.manage.utils.result.Result;
 import com.google.zxing.WriterException;
 import lombok.extern.slf4j.Slf4j;
@@ -72,7 +72,7 @@ public class RegistrationController {
      */
     @PostMapping
     public Result registration(@RequestBody RegistrationDTO registrationDTO) {
-        if(!RegexUtils.isPhoneValid(registrationDTO.getPhone())) {
+        if(!RegexUtil.isPhoneValid(registrationDTO.getPhone())) {
             return Result.error("输入的电话号不正确");
         }
         return registrationService.registration(registrationDTO);
@@ -85,7 +85,7 @@ public class RegistrationController {
      */
     @GetMapping
     public Result<List<Activity2RegisterVO>> queryRegistrationInfo(@RequestParam("phone") String phone) {
-        if(!RegexUtils.isPhoneValid(phone)) {
+        if(!RegexUtil.isPhoneValid(phone)) {
             return Result.error("错误的手机格式");
         }
         // TODO 完成相关service中封装类和批量查询的功能

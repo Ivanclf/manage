@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
 public interface AdminMapper {
+
     Administrator loginById(Administrator administrator);
 
     Administrator loginByName(Administrator administrator);
@@ -12,4 +13,6 @@ public interface AdminMapper {
     Administrator queryById(Administrator administratorOld);
 
     void update(Administrator administratorNew);
+
+    
 }

@@ -2,7 +2,7 @@ package com.activity.manage.utils;
 
 import cn.hutool.core.util.StrUtil;
 
-public class RegexUtils {
+public class RegexUtil {
 
     /**
      * 校验电话号是否正确

@@ -42,6 +42,12 @@ mybatis:
   type-aliases-package: com.activity.manage.pojo.entity
   configuration:
     map-underscore-to-camel-case: true
+aliyun:
+  oss:
+    endpoint: ${aliyun.oss.endpoint}
+    accessKeyId: ${aliyun.oss.accessKeyId}
+    accessKeySecret: ${aliyun.oss.accessKeySecret}
+    bucketName: ${aliyun.oss.bucketName}
 logging:
   level:
     com.activity.manage: debug
