@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.activity.manage.mapper.ActivityMapper">
+
+    <insert id="insert" parameterType="com.activity.manage.pojo.entity.Activity" useGeneratedKeys="true" keyProperty="id">
+        insert into activity (activity_name, activity_description, status, latitude, longitude, location,
+        qr_code_oss_url, link, registration_start, registration_end, activity_start,
+        activity_end, release_time, creator_id, create_time, update_time,
+        max_participants, current_participants)
+        values (#{activityName}, #{activityDescription}, #{status}, #{latitude}, #{longitude}, #{location},
+        #{qrCodeOssUrl}, #{link}, #{registrationStart}, #{registrationEnd}, #{activityStart},
+        #{activityEnd}, #{releaseTime}, #{creatorId}, #{createTime}, #{updateTime},
+        #{maxParticipants}, #{currentParticipants})
+    </insert>
+
+    <update id="update" parameterType="com.activity.manage.pojo.entity.Activity">
+        update activity
+        <set>
+            <if test="activityName != null and activityName != ''">
+                activity_name = #{activityName},
+            </if>
+            <if test="activityDescription != null">
+                activity_description = #{activityDescription},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="latitude != null">
+                latitude = #{latitude},
+            </if>
+            <if test="longitude != null">
+                longitude = #{longitude},
+            </if>
+            <if test="location != null">
+                location = #{location},
+            </if>
+            <if test="qrCodeOssUrl != null">
+                qr_code_oss_url = #{qrCodeOssUrl},
+            </if>
+            <if test="link != null">
+                link = #{link},
+            </if>
+            <if test="registrationStart != null">
+                registration_start = #{registrationStart},
+            </if>
+            <if test="registrationEnd != null">
+                registration_end = #{registrationEnd},
+            </if>
+            <if test="activityStart != null">
+                activity_start = #{activityStart},
+            </if>
+            <if test="activityEnd != null">
+                activity_end = #{activityEnd},
+            </if>
+            <if test="releaseTime != null">
+                release_time = #{releaseTime},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime},
+            </if>
+            <if test="maxParticipants != null">
+                max_participants = #{maxParticipants},
+            </if>
+            <if test="currentParticipants != null">
+                current_participants = #{currentParticipants},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="selectById" resultType="com.activity.manage.pojo.entity.Activity">
+        select * from activity where id = #{id}
+    </select>
+
+    <select id="selectByParams" parameterType="map" resultType="com.activity.manage.pojo.entity.Activity">
+        select * from activity
+        <where>
+            <if test="activityName != null and activityName != ''">
+                and activity_name like concat('%', #{activityName}, '%')
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+            <if test="location != null and location != ''">
+                and location like concat('%', #{location}, '%')
+            </if>
+            <if test="isFull != null and isFull == true">
+                and current_participants &gt;= max_participants
+            </if>
+            <if test="isFull != null and isFull == false">
+                and current_participants &lt; max_participants
+            </if>
+        </where>
+        order by create_time desc
+    </select>
+
+    <delete id="deleteById">
+        delete from activity where id = #{id}
+    </delete>
+
+    <select id="selectByTimeRange" parameterType="map" resultType="com.activity.manage.pojo.entity.Activity">
+        select * from activity
+        <where>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+            <if test="startTime != null and endTime != null and fieldName != null">
+                and ${fieldName} between #{startTime} and #{endTime}
+            </if>
+        </where>
+    </select>
+
+</mapper>
