@@ -72,14 +72,19 @@ public class ActivityService {
         PageHelper.startPage(pageNum, pageSize);
 
         // 2. 构造查询参数
-        Map<String, Object> params = new HashMap<>();
-        params.put("activityName", activityName);
-        params.put("status", status);
-        params.put("isFull", isFull);
-        params.put("location", location);
+        Activity activity = Activity.builder()
+                .activityName(activityName)
+                .status(status)
+                .location(location)
+                .build();
 
         // 3. 执行查询
-        List<Activity> list = activityMapper.selectByParams(params);
+        List<Activity> list = activityMapper.select(activity);
+        if (isFull != null) {
+            list = list.stream()
+                    .filter(a -> (a.getMaxParticipants() - a.getCurrentParticipants() == 0) == isFull)
+                    .toList();
+        }
 
         // 4. 封装分页结果
         PageInfo<Activity> pageInfo = new PageInfo<>(list);

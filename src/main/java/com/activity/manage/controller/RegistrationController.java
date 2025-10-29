@@ -3,11 +3,14 @@ package com.activity.manage.controller;
 import cn.hutool.core.util.ObjectUtil;
 import com.activity.manage.pojo.dto.CheckinDTO;
 import com.activity.manage.pojo.dto.RegistrationDTO;
+import com.activity.manage.pojo.entity.Activity;
 import com.activity.manage.pojo.vo.Activity2RegisterVO;
+import com.activity.manage.service.ActivityService;
 import com.activity.manage.service.QRCodeService;
 import com.activity.manage.service.RegistrationService;
 import com.activity.manage.utils.RegexUtil;
 import com.activity.manage.utils.result.Result;
+import com.github.pagehelper.PageInfo;
 import com.google.zxing.WriterException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +33,8 @@ public class RegistrationController {
     private QRCodeService qrCodeService;
     @Autowired
     private RegistrationService registrationService;
+    @Autowired
+    private ActivityService activityService;
 
     /**
      * 生成活动报名二维码
@@ -84,12 +89,15 @@ public class RegistrationController {
      * @return
      */
     @GetMapping
-    public Result<List<Activity2RegisterVO>> queryRegistrationInfo(@RequestParam("phone") String phone) {
+    public Result<PageInfo<Activity2RegisterVO>> queryRegistrationInfo(
+            @RequestParam("phone") String phone,
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize
+    ) {
         if(!RegexUtil.isPhoneValid(phone)) {
-            return Result.error("错误的手机格式");
+            return Result.error("错误的手机号格式");
         }
-        // TODO 完成相关service中封装类和批量查询的功能
-        return Result.success();
+        return registrationService.searchActivitiesByPhone(phone, pageNum, pageSize);
     }
 
     @PostMapping("/checkin")

@@ -2,11 +2,16 @@ package com.activity.manage.service;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.activity.manage.config.RabbitMQConfig;
+import com.activity.manage.mapper.ActivityMapper;
 import com.activity.manage.mapper.RegistrationMapper;
 import com.activity.manage.pojo.dto.CheckinDTO;
 import com.activity.manage.pojo.dto.RegistrationDTO;
+import com.activity.manage.pojo.entity.Activity;
 import com.activity.manage.pojo.entity.Registration;
+import com.activity.manage.pojo.vo.Activity2RegisterVO;
 import com.activity.manage.utils.result.Result;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -18,7 +23,9 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 import static com.activity.manage.utils.constant.RabbitMQConstant.CHECKIN_QUEUE;
@@ -32,11 +39,11 @@ public class RegistrationService {
     @Autowired
     private RegistrationMapper registrationMapper;
     @Autowired
+    private ActivityMapper activityMapper;
+    @Autowired
     private StringRedisTemplate stringRedisTemplate;
     @Autowired
     private RabbitTemplate rabbitTemplate;
-    @Autowired
-    private RabbitMQConfig rabbitMQConfig;
     @Autowired
     private static final DefaultRedisScript<Long> REGISTRATION_SCRIPT;
     static {
@@ -48,14 +55,12 @@ public class RegistrationService {
     public Result registration(RegistrationDTO registrationDTO) {
         Long activityId = registrationDTO.getActivityId();
         String phone = registrationDTO.getPhone();
-        // TODO 此处需要查询活动信息，查看活动是否存在，是否在报名时间内
-        // 将活动信息放进集合中
-        rabbitMQConfig.addActiveActivityId(activityId);
         // 执行Lua脚本，查看返回的结果
         Long result = stringRedisTemplate.execute(
                 REGISTRATION_SCRIPT,
                 Collections.emptyList(),
-                activityId.toString(), phone
+                activityId.toString(),
+                phone
         );
         switch (result.intValue()) {
             case 1 -> {
@@ -119,9 +124,6 @@ public class RegistrationService {
             return Result.error("不在签到范围内");
         }
         stringRedisTemplate.opsForGeo().remove(CHECKIN_LOCATION_KEY, "temp");
-
-        // 将活动ID记录到配置中以便创建/找到对应队列
-        rabbitMQConfig.addActiveActivityId(activityId);
         // 将签到信息发送到对应队列，异步处理
         String queue = activityId + CHECKIN_QUEUE;
         rabbitTemplate.convertAndSend(queue, checkinDTO);
@@ -129,19 +131,41 @@ public class RegistrationService {
     }
 
     /**
-     * 消费签到队列，执行数据库更新
+     * 消费队列，执行数据库更新
      * @param checkinDTO
      */
     @RabbitListener(queues = "#{@rabbitMQConfig.checkinQueues}")
     public void doCheckin(CheckinDTO checkinDTO) {
         try {
             Registration registration = new Registration();
-            registration.setActivityId(checkinDTO.getId());
-            registration.setPhone(checkinDTO.getPhone());
+            BeanUtil.copyProperties(checkinDTO, Registration.class);
             registration.setCheckin(1);
             registrationMapper.checkin(registration);
         } catch (Exception e) {
             log.error("处理签到消息时发生错误: {}", e.getMessage(), e);
         }
+    }
+
+    /**
+     * 用户查看报名信息
+     *
+     * @param phone
+     * @param pageNum
+     * @param pageSize
+     * @return
+     */
+    public Result<PageInfo<Activity2RegisterVO>> searchActivitiesByPhone(String phone, int pageNum, int pageSize) {
+        PageHelper.startPage(pageNum, pageSize);
+        List<Long> activityIds = registrationMapper.selectActivityIdByPhone(phone);
+        List<Activity> activityList = activityMapper.selectByIdBatch(activityIds);
+        List<Activity2RegisterVO> activity2RegisterVOList = new ArrayList<>();
+        if(activityList != null) {
+            for (Activity activity : activityList) {
+                Activity2RegisterVO a = BeanUtil.copyProperties(activity, Activity2RegisterVO.class);
+                activity2RegisterVOList.add(a);
+            }
+        }
+        PageInfo<Activity2RegisterVO> pageInfo = new PageInfo<>(activity2RegisterVOList);
+        return Result.success(pageInfo);
     }
 }

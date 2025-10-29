@@ -73,11 +73,14 @@
         select * from activity where id = #{id}
     </select>
 
-    <select id="selectByParams" parameterType="map" resultType="com.activity.manage.pojo.entity.Activity">
+    <select id="select" resultType="com.activity.manage.pojo.entity.Activity" parameterType="com.activity.manage.pojo.entity.Activity">
         select * from activity
         <where>
+            <if test="id != null and id > 0L">
+                and id = #{id}
+            </if>
             <if test="activityName != null and activityName != ''">
-                and activity_name like concat('%', #{activityName}, '%')
+                and activityName like concat('%' #{activityName}, '%')
             </if>
             <if test="status != null">
                 and status = #{status}
@@ -85,30 +88,37 @@
             <if test="location != null and location != ''">
                 and location like concat('%', #{location}, '%')
             </if>
-            <if test="isFull != null and isFull == true">
-                and current_participants &gt;= max_participants
+            <if test="maxParticipants != null">
+                and max_participants = #{maxParticipants}
             </if>
-            <if test="isFull != null and isFull == false">
-                and current_participants &lt; max_participants
+            <if test="currentParticipants != null">
+                and current_participents = #{currentParticipants}
             </if>
         </where>
-        order by create_time desc
     </select>
 
-    <delete id="deleteById">
+    <delete id="deleteById" parameterType="java.lang.Long">
         delete from activity where id = #{id}
     </delete>
 
-    <select id="selectByTimeRange" parameterType="map" resultType="com.activity.manage.pojo.entity.Activity">
+    <select id="selectByRegistrationStart" resultType="com.activity.manage.pojo.entity.Activity" parameterType="java.time.LocalDateTime">
         select * from activity
         <where>
-            <if test="status != null">
-                and status = #{status}
-            </if>
-            <if test="startTime != null and endTime != null and fieldName != null">
-                and ${fieldName} between #{startTime} and #{endTime}
-            </if>
+            #{time} between registration_start and registration_end
         </where>
     </select>
 
+    <select id="selectByActivityStart" resultType="com.activity.manage.pojo.entity.Activity" parameterType="java.time.LocalDateTime">
+        select * from activity
+        <where>
+            #{time} between activity_start and activity_end
+        </where>
+    </select>
+    
+    <select id="selectByIdBatch" resultType="com.activity.manage.pojo.entity.Activity">
+        select * from activity where id in
+            <foreach collection="ids" separator="," item="id" open="(" close=")">
+                #{id}
+            </foreach>
+    </select>
 </mapper>
