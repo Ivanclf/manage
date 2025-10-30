@@ -1,14 +1,12 @@
 package com.activity.manage.service;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.activity.manage.config.AliOssConfig;
 import com.activity.manage.config.RabbitMQConfig;
 import com.activity.manage.mapper.ActivityMapper;
 import com.activity.manage.pojo.dto.ActivityDTO;
 import com.activity.manage.pojo.dto.AdministratorDTO;
 import com.activity.manage.pojo.entity.Activity;
 import com.activity.manage.utils.AdminHolder;
-import com.activity.manage.utils.AliOSSUtil;
 import com.activity.manage.utils.constant.ActivityConstant;
 import com.activity.manage.utils.result.Result;
 import com.github.pagehelper.PageHelper;
@@ -19,10 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 import static com.activity.manage.utils.constant.RedisConstant.*;
 

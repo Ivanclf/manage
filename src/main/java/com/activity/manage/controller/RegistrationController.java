@@ -3,9 +3,7 @@ package com.activity.manage.controller;
 import cn.hutool.core.util.ObjectUtil;
 import com.activity.manage.pojo.dto.CheckinDTO;
 import com.activity.manage.pojo.dto.RegistrationDTO;
-import com.activity.manage.pojo.entity.Activity;
 import com.activity.manage.pojo.vo.Activity2RegisterVO;
-import com.activity.manage.service.ActivityService;
 import com.activity.manage.service.QRCodeService;
 import com.activity.manage.service.RegistrationService;
 import com.activity.manage.utils.RegexUtil;
@@ -15,13 +13,11 @@ import com.google.zxing.WriterException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import java.io.IOException;
-import java.util.List;
 
 import static com.activity.manage.utils.constant.QRCodeConstant.*;
 

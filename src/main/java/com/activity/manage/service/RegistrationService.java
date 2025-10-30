@@ -1,7 +1,6 @@
 package com.activity.manage.service;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.activity.manage.config.RabbitMQConfig;
 import com.activity.manage.mapper.ActivityMapper;
 import com.activity.manage.mapper.RegistrationMapper;
 import com.activity.manage.pojo.dto.CheckinDTO;
