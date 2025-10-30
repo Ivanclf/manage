@@ -90,11 +90,11 @@ public class ActivityController {
      * 接口文档: GET /activity/{id}/qrcode
      */
     @GetMapping(value = "/{id}/qrcode", produces = MediaType.IMAGE_PNG_VALUE)
-    public ResponseEntity<byte[]> getQRCode(@PathVariable("id") Long id,
-                                            @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int width,
-                                            @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int height) throws WriterException, IOException {
+    public Result<String> getQRCode(@PathVariable("id") Long id,
+                                    @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int width,
+                                    @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int height) throws WriterException, IOException {
         // 优化：二维码内容应指向具体活动，而不仅仅是首页
         String content = ACTIVITY_PAGE;
-        return qrCodeService.generateQRCode(content, width, height);
+        return qrCodeService.generateQRCodeWithUrl(content, width, height);
     }
 }

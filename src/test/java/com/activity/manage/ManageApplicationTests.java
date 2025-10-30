@@ -12,6 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
+import static com.activity.manage.utils.constant.QRCodeConstant.QRCODE_FORMAT;
+import static com.activity.manage.utils.constant.QRCodeConstant.QRCODE_ROUTE;
+
 @Slf4j
 @SpringBootTest
 class ManageApplicationTests {
@@ -24,6 +27,8 @@ class ManageApplicationTests {
     private RabbitTemplate rabbitTemplate;
     @Autowired
     private AliOSSUtil aliOSSUtil;
+    @Autowired
+    private QRCodeUtil qrCodeUtil;
 
 	@Test
 	void mysqlConnected() {
@@ -58,7 +63,8 @@ class ManageApplicationTests {
     @Test
     void testUploadQRCode() {
         try {
-            String url = aliOSSUtil.uploadQRCode("localhost:8080", 300, 300);
+            byte[] image = qrCodeUtil.generateQRCodeBytes("localhost:8080", 300, 300);
+            String url = aliOSSUtil.upload(image, QRCODE_ROUTE, QRCODE_FORMAT);
             log.info("二维码已上传到OSS，访问URL：{}", url);
         } catch (Exception e) {
             log.error("上传二维码失败");

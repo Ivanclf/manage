@@ -33,8 +33,6 @@ public class RegistrationController {
     private QRCodeService qrCodeService;
     @Autowired
     private RegistrationService registrationService;
-    @Autowired
-    private ActivityService activityService;
 
     /**
      * 生成活动报名二维码
@@ -46,11 +44,11 @@ public class RegistrationController {
      * @throws IOException
      */
     @GetMapping(value = "/{id}/registration/qrcode", produces = MediaType.IMAGE_PNG_VALUE)
-    public ResponseEntity<byte[]> getRegistrationQRCode(@PathVariable("id") Long id,
-                                            @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int width,
-                                            @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int height) throws WriterException, IOException {
+    public Result<String> getRegistrationQRCode(@PathVariable("id") Long id,
+                                                @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int width,
+                                                @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int height) throws WriterException, IOException {
         String content = REGISTRATION_PAGE;
-        return qrCodeService.generateQRCode(content, width, height);
+        return qrCodeService.generateQRCodeWithUrl(content, width, height);
     }
 
     /**
@@ -63,11 +61,11 @@ public class RegistrationController {
      * @throws IOException
      */
     @GetMapping(value = "/{id}/checkin/qrcode", produces = MediaType.IMAGE_PNG_VALUE)
-    public ResponseEntity<byte[]> getCheckinQRCode(@PathVariable("id") Long id,
+    public Result<String> getCheckinQRCode(@PathVariable("id") Long id,
                                             @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int width,
                                             @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int height) throws WriterException, IOException {
         String content = CHECKIN_PAGE;
-        return qrCodeService.generateQRCode(content, width, height);
+        return qrCodeService.generateQRCodeWithUrl(content, width, height);
     }
 
     /**

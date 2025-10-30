@@ -16,6 +16,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.Locale;
 
+import static com.activity.manage.utils.constant.QRCodeConstant.QRCODE_FORMAT;
+
 @Component
 @Slf4j
 public class AliOSSUtil {
@@ -44,6 +46,7 @@ public class AliOSSUtil {
         if (ossClient != null) {
             try {
                 ossClient.shutdown();
+                log.info("AliOSS客户端已成功关闭");
             } catch (Exception e) {
                 log.warn("关闭 AliOSS 客户端时发生错误（忽略）: {}", e.getMessage());
             }
@@ -56,7 +59,7 @@ public class AliOSSUtil {
      * @param bytes 二维码 PNG 字节
      * @return 可访问的文件 URL
      */
-    public String uploadQRCode(byte[] bytes) {
+    public String upload(byte[] bytes, String route, String suffix) {
         if (bytes == null || bytes.length == 0) {
             throw new IllegalArgumentException("bytes 为空");
         }
@@ -65,7 +68,7 @@ public class AliOSSUtil {
         }
         try {
             String md5 = md5Hex(bytes);
-            String key = "qrcodes/" + md5 + ".png";
+            String key = route + md5 + suffix;
             String bucket = aliOssConfig.getBucketName();
             // 如果对象已存在，则返回带签名的私有访问 URL
             if (ossClient.doesObjectExist(bucket, key)) {
@@ -76,33 +79,19 @@ public class AliOSSUtil {
             ByteArrayInputStream is = new ByteArrayInputStream(bytes);
             ObjectMetadata meta = new ObjectMetadata();
             meta.setContentLength(bytes.length);
-            meta.setContentType("image/png");
+            switch (suffix) {
+                case QRCODE_FORMAT -> {
+                    meta.setContentType("image/png");
+                }
+                default -> {
+                    log.error("传输的文件格式错误");
+                }
+            }
             ossClient.putObject(bucket, key, is, meta);
             log.info("上传二维码到 OSS 完成: {}", key);
             return generatePresignedUrl(key, 3600);
         } catch (Exception e) {
             log.error("上传二维码到 OSS 失败", e);
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * 直接使用 content/尺寸生成二维码并上传
-     */
-    public String uploadQRCode(String content, int width, int height) {
-        // 添加参数验证
-        if (content == null || content.isEmpty()) {
-            throw new IllegalArgumentException("content 不能为空");
-        }
-        if (width <= 0 || height <= 0) {
-            throw new IllegalArgumentException("width 和 height 必须大于0");
-        }
-
-        try {
-            byte[] bytes = QRCodeUtil.generateQRCodeBytes(content, width, height);
-            return uploadQRCode(bytes);
-        } catch (Exception e) {
-            log.error("生成或上传二维码失败", e);
             throw new RuntimeException(e);
         }
     }
@@ -137,6 +126,13 @@ public class AliOSSUtil {
         }
     }
 
+    /**
+     * 计算字节数组的MD5哈希值并返回十六进制字符串表示
+     *
+     * @param bytes 需要计算MD5哈希值的字节数组
+     * @return MD5哈希值的十六进制字符串表示
+     * @throws RuntimeException 当MD5算法不可用时抛出运行时异常
+     */
     private String md5Hex(byte[] bytes) {
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
