@@ -31,14 +31,22 @@
 
 ## 技术架构
 
-后端框架: Spring Boot + MyBatis
-数据库: MySQL
-缓存: Redis
-消息队列: RabbitMQ
-对象存储: 阿里云OSS
-定时任务: Spring Scheduled
-
-
+后端框架: Spring Boot 3.5.6 + MyBatis 3.0.5
+数据库: MySQL (mysql-connector-j 8.x)
+缓存: Redis (Spring Data Redis)
+消息队列: RabbitMQ (Spring AMQP)
+对象存储: 阿里云OSS (aliyun-sdk-oss 3.17.4)
+分页插件: PageHelper 1.4.7
+API文档: Knife4j 3.0.2 (Swagger增强)
+二维码生成: Google ZXing 3.3.0
+工具库: Hutool 5.8.16
+其他技术:
+- Lombok
+- WebSocket
+- JAXB (用于XML处理)
+- commons-pool2 (Redis连接池)
+- Actuator (应用监控)
+- Mockito (测试框架)
 
 ## 系统特色
 
@@ -46,7 +54,9 @@
 - **高可用**: RabbitMQ异步处理确保系统稳定性
 - **自动化**: 定时任务自动更新活动状态
 - **智能化**: 地理位置签到验证确保签到准确性
+- **安全性**: JWT Token认证与Redis结合，支持自动续期
 - **易扩展**: 模块化设计便于功能扩展
+- **可视化**: 集成API文档，方便前后端调试
 
 ## 开发规范
 
