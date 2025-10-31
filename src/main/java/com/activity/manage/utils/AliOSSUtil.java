@@ -3,7 +3,7 @@ package com.activity.manage.utils;
 import com.activity.manage.config.AliOssConfig;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
-import com.aliyun.oss.model.ObjectMetadata;
+import com.aliyun.oss.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -12,10 +12,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.ByteArrayInputStream;
 import java.net.URL;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Date;
-import java.util.Locale;
+import java.util.*;
 
 import static com.activity.manage.utils.constant.QRCodeConstant.QRCODE_FORMAT;
 
@@ -28,7 +25,7 @@ public class AliOSSUtil {
     private OSS ossClient;
 
     @PostConstruct
-    public void init() {
+    public void init() throws RuntimeException{
         try {
             ossClient = new OSSClientBuilder().build(
                     aliOssConfig.getEndpoint(),
@@ -38,7 +35,7 @@ public class AliOSSUtil {
             log.info("初始化 AliOSS 客户端，endpoint={}, bucket={}", aliOssConfig.getEndpoint(), aliOssConfig.getBucketName());
         } catch (Exception e) {
             log.error("初始化 AliOSS 客户端失败", e);
-            // ossClient 保持为 null，后续调用会检查并抛出
+            throw new RuntimeException(e);
         }
     }
 
@@ -49,7 +46,7 @@ public class AliOSSUtil {
                 ossClient.shutdown();
                 log.info("AliOSS客户端已成功关闭");
             } catch (Exception e) {
-                log.warn("关闭 AliOSS 客户端时发生错误（忽略）: {}", e.getMessage());
+                log.warn("关闭 AliOSS 客户端时发生错误: {}", e.getMessage());
             }
         }
     }
@@ -60,16 +57,20 @@ public class AliOSSUtil {
      * @param bytes 二维码 PNG 字节
      * @return 可访问的文件 URL
      */
-    public String upload(byte[] bytes, String route, String suffix) {
+    public String upload(byte[] bytes, QRCodeMap QRCodeMap) {
         if (bytes == null || bytes.length == 0) {
-            throw new IllegalArgumentException("bytes 为空");
+            log.warn("byte为空");
+            throw new RuntimeException("byte为空");
         }
-        if (ossClient == null) {
-            throw new IllegalStateException("OSS 客户端未初始化");
+        if(QRCodeMap == null || QRCodeMap.getQRCodeMap().isEmpty()) {
+            log.warn("参数为空");
+            throw new RuntimeException("参数为空");
         }
+
+        Map<String, String> map = QRCodeMap.getQRCodeMap();
         try {
-            String md5 = md5Hex(bytes);
-            String key = route + md5 + suffix;
+            String md5 = Md5Util.md5Str(map.get("id"));
+            String key = map.get("route") + md5 + map.get("format");
             String bucket = aliOssConfig.getBucketName();
             // 如果对象已存在，则返回带签名的私有访问 URL
             if (ossClient.doesObjectExist(bucket, key)) {
@@ -80,7 +81,7 @@ public class AliOSSUtil {
             ByteArrayInputStream is = new ByteArrayInputStream(bytes);
             ObjectMetadata meta = new ObjectMetadata();
             meta.setContentLength(bytes.length);
-            switch (suffix) {
+            switch (map.get("format")) {
                 case QRCODE_FORMAT -> {
                     meta.setContentType("image/png");
                 }
@@ -111,10 +112,7 @@ public class AliOSSUtil {
      * @param expireSeconds 失效时长（秒）
      * @return 可访问的签名 URL
      */
-    private String generatePresignedUrl(String key, long expireSeconds) {
-        if (ossClient == null) {
-            throw new IllegalStateException("OSS 客户端未初始化");
-        }
+    public String generatePresignedUrl(String key, long expireSeconds) {
         String bucket = aliOssConfig.getBucketName();
         Date expiration = new Date(System.currentTimeMillis() + expireSeconds * 1000);
         try {
@@ -128,24 +126,73 @@ public class AliOSSUtil {
     }
 
     /**
-     * 计算字节数组的MD5哈希值并返回十六进制字符串表示
-     *
-     * @param bytes 需要计算MD5哈希值的字节数组
-     * @return MD5哈希值的十六进制字符串表示
-     * @throws RuntimeException 当MD5算法不可用时抛出运行时异常
+     * 从指定的OSS URL获取图片字节数据
+     * @param objectKey OSS对象键（不是完整URL）
+     * @return 图片的字节数据
      */
-    private String md5Hex(byte[] bytes) {
+    public byte[] getImage(String objectKey) {
         try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            byte[] digest = md.digest(bytes);
-            StringBuilder sb = new StringBuilder(digest.length * 2);
-            for (byte b : digest) {
-                sb.append(String.format("%02x", b & 0xff));
+            if(objectKey == null) {
+                log.warn("获取oss的对象键不能为空");
+                throw new RuntimeException("获取oss的对象键不能为空");
             }
-            return sb.toString();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("MD5 算法不可用", e);
+            String bucket = aliOssConfig.getBucketName();
+            if(!ossClient.doesObjectExist(bucket, objectKey)) {
+                log.warn("图片不存在");
+                throw new RuntimeException("图片不存在");
+            }
+            // 获取图片流
+            OSSObject ossObject = ossClient.getObject(bucket, objectKey);
+            // 转换为字节数组
+            byte[] bytes = ossObject.getObjectContent().readAllBytes();
+            log.info("从OSS获取图片成功，对象键: {}", objectKey);
+            return bytes;
+        } catch (Exception e) {
+            log.error("从OSS获取图片失败", e);
+            throw new RuntimeException("从OSS获取图片失败", e);
         }
     }
 
+    public List<String> listObjectsByPrefix(String prefix) {
+        try {
+            String bucket = aliOssConfig.getBucketName();
+            ListObjectsRequest listObjectsRequest =
+                    new ListObjectsRequest(bucket);
+            listObjectsRequest.setPrefix(prefix);
+
+            ObjectListing objectListing = ossClient.listObjects(listObjectsRequest);
+            List<String> objectKeys = new ArrayList<>();
+
+            for (OSSObjectSummary objectSummary : objectListing.getObjectSummaries()) {
+                String key = objectSummary.getKey();
+                // 跳过目录标记和空对象
+                if(!key.endsWith("/") && objectSummary.getSize() > 0) {
+                    objectKeys.add(key);
+                }
+            }
+
+            log.info("列出路径 {} 下的对象共 {} 个", prefix, objectKeys.size());
+            return objectKeys;
+        } catch (Exception e) {
+            log.error("列出对象失败，prefix: {}", prefix, e);
+            throw new RuntimeException("列出对象失败", e);
+        }
+    }
+
+    /**
+     * 获取OSS存储桶名称
+     * @return 存储桶名称
+     */
+    public String getBucketName() {
+        return aliOssConfig.getBucketName();
+    }
+
+    /**
+     * 删除OSS对象
+     * @param bucketName 存储桶名称
+     * @param objectKey 对象键
+     */
+    public void deleteObject(String bucketName, String objectKey) {
+        ossClient.deleteObject(bucketName, objectKey);
+    }
 }

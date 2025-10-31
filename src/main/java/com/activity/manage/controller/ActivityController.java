@@ -1,5 +1,6 @@
 package com.activity.manage.controller;
 
+import com.activity.manage.mapper.ActivityMapper;
 import com.activity.manage.pojo.dto.ActivityDTO;
 import com.activity.manage.pojo.entity.Activity;
 import com.activity.manage.service.ActivityService;
@@ -16,8 +17,7 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import java.io.IOException;
 
-import static com.activity.manage.utils.constant.QRCodeConstant.ACTIVITY_PAGE;
-import static com.activity.manage.utils.constant.QRCodeConstant.DEFAULT_SIZE;
+import static com.activity.manage.utils.constant.QRCodeConstant.*;
 
 @RestController
 @RequestMapping("/activity")
@@ -26,9 +26,10 @@ public class ActivityController {
 
     @Autowired
     private QRCodeService qrCodeService;
-
     @Autowired
     private ActivityService activityService;
+    @Autowired
+    private ActivityMapper activityMapper;
 
     /**
      * 1. 创建活动
@@ -85,15 +86,26 @@ public class ActivityController {
 
 
     /**
-     * 6. 生成活动网页二维码 (你已有的功能)
+     * 6. 生成活动网页二维码
      * 接口文档: GET /activity/{id}/qrcode
      */
+
     @GetMapping(value = "/{id}/qrcode", produces = MediaType.IMAGE_PNG_VALUE)
     public Result<String> getQRCode(@PathVariable("id") Long id,
                                     @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int width,
                                     @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int height) throws WriterException, IOException {
-        // 优化：二维码内容应指向具体活动，而不仅仅是首页
-        String content = ACTIVITY_PAGE;
-        return qrCodeService.generateQRCodeWithUrl(content, width, height);
+        String content = ACTIVITY_PAGE + "activity/" + id;
+        Result<String> result = qrCodeService.generateQRCodeWithUrl(content, width, height, QRCODE_ACTIVITY_ROUTE, id);
+        
+        // 更新数据库中活动的二维码URL
+        if (result.getCode() == 1) {
+            Activity activity = Activity.builder()
+                    .id(id)
+                    .qrCodeOssUrl(result.getData())
+                    .build();
+            activityMapper.update(activity);
+        }
+        
+        return result;
     }
 }

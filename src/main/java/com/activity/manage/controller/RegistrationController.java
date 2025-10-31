@@ -44,7 +44,7 @@ public class RegistrationController {
                                                 @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int width,
                                                 @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int height) throws WriterException, IOException {
         String content = REGISTRATION_PAGE;
-        return qrCodeService.generateQRCodeWithUrl(content, width, height);
+        return qrCodeService.generateQRCodeWithUrl(content, width, height, QRCODE_REGISTRATION_ROUTE, id);
     }
 
     /**
@@ -61,7 +61,7 @@ public class RegistrationController {
                                             @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int width,
                                             @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int height) throws WriterException, IOException {
         String content = CHECKIN_PAGE;
-        return qrCodeService.generateQRCodeWithUrl(content, width, height);
+        return qrCodeService.generateQRCodeWithUrl(content, width, height, QRCODE_CHECKIN_ROUTE, id);
     }
 
     /**
