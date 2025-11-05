@@ -1,8 +1,10 @@
 target/
-.mvn/wrapper/maven-wrapper.jar
+.mvn/
 !**/src/main/**/target/
 !**/src/test/**/target/
 src/main/resources/application-dev.yml
+mvnw
+mvnw.cmd
 
 ### STS ###
 .apt_generated
