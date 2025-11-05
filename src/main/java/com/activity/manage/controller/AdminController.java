@@ -4,6 +4,7 @@ import com.activity.manage.pojo.dto.AdministratorPasswordDTO;
 import com.activity.manage.pojo.dto.AdministratorUsernameDTO;
 import com.activity.manage.pojo.entity.Administrator;
 import com.activity.manage.service.AdminService;
+import com.activity.manage.utils.exception.RedisException;
 import com.activity.manage.utils.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +28,7 @@ public class AdminController {
         if(token != null && !token.isEmpty()) {
             return Result.success(token);
         } else {
-            return Result.error("账号或密码错误");
+            throw new RedisException();
         }
     }
 

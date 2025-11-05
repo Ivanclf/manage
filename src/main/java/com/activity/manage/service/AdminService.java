@@ -11,6 +11,9 @@ import com.activity.manage.pojo.dto.AdministratorUsernameDTO;
 import com.activity.manage.pojo.entity.Administrator;
 import com.activity.manage.utils.AdminHolder;
 import com.activity.manage.utils.TokenUtil;
+import com.activity.manage.utils.exception.AdminInfoErrorException;
+import com.activity.manage.utils.exception.AdminInfoNullException;
+import com.activity.manage.utils.exception.NullParamException;
 import com.activity.manage.utils.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,17 +40,19 @@ public class AdminService {
     public String login(Administrator administrator) {
         // 校验完整性
         if(administrator.getUserPassword().isEmpty()) {
-            return null;
+            throw new AdminInfoNullException();
         }
-        // 检查用户通过什么方式登录
+        // 检查用户通过什么方式登录，有没有写入账号
         Administrator admin = null;
         if(administrator.getId() != null) {
             admin = adminMapper.loginById(administrator);
         } else if(administrator.getUserName() != null) {
             admin = adminMapper.loginByName(administrator);
+        } else {
+            throw new AdminInfoNullException();
         }
         if(admin == null) {
-            return null;
+            throw new AdminInfoErrorException();
         }
         // 登录成功，获取token，放到redis中。redis的键为token，值为用户的id和账号
         String token = UUID.randomUUID().toString(true);
@@ -63,12 +68,15 @@ public class AdminService {
         return token;
     }
 
+    @Transactional
     public void logout() {
         // 使用 TokenUtil 获取 token 并删除对应的 Redis key
         String token = TokenUtil.getTokenFromRequest();
         if (!StrUtil.isBlank(token)) {
             String tokenKey = LOGIN_ADMIN_KEY + token;
             stringRedisTemplate.delete(tokenKey);
+        } else {
+            throw new NullParamException();
         }
         // 清理线程本地存储的管理员信息
         AdminHolder.removeAdmin();
@@ -83,7 +91,7 @@ public class AdminService {
         // 查看旧密码有没有输入正确
         Administrator administratorNew = adminMapper.queryById(administratorOld);
         if(administratorNew == null) {
-            return Result.error("旧密码输入错误");
+            throw new AdminInfoErrorException();
         }
         // 输入正确，更新密码
         administratorNew.setUserPassword(administratorPasswordDTO.getNewPassword());
@@ -97,7 +105,7 @@ public class AdminService {
         String token = LOGIN_ADMIN_KEY + TokenUtil.getTokenFromRequest();
         AdministratorDTO administratorDTO = TokenUtil.getAdminFromToken(token, stringRedisTemplate);
         if(administratorDTO == null) {
-            return;
+            throw new AdminInfoErrorException();
         }
         // 更改信息，更新数据库数据
         administratorDTO.setUserName(administratorUsernameDTO.getUserName());

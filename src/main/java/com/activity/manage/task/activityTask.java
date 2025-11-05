@@ -4,6 +4,7 @@ import com.activity.manage.config.RabbitMQConfig;
 import com.activity.manage.mapper.ActivityMapper;
 import com.activity.manage.mapper.RegistrationMapper;
 import com.activity.manage.pojo.entity.Activity;
+import com.activity.manage.utils.exception.BaseException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -109,8 +110,7 @@ public class activityTask {
                             args
                     );
                     if(result == null || result == 0L) {
-                        log.info("lua脚本执行失败");
-                        continue;
+                        throw new BaseException("lua脚本执行失败");
                     }
                     rabbitMQConfig.addCheckinActivityId(activityId);
                     rabbitTemplate.convertAndSend(queue, "");
@@ -149,18 +149,14 @@ public class activityTask {
                             // 说明不是报名队列，尝试去掉签到后缀
                             activityIdStr = queueName.replace(CHECKIN_QUEUE, "");
                         }
-                        try {
-                            Long activityId = Long.parseLong(activityIdStr);
-                            rabbitMQConfig.removeActivityId(activityId);
-                            log.info("已删除空队列: {}", queueName);
-                        } catch (NumberFormatException e) {
-                            log.warn("无法解析活动ID: {}", activityIdStr);
-                        }
+                        Long activityId = Long.parseLong(activityIdStr);
+                        rabbitMQConfig.removeActivityId(activityId);
+                        log.info("已删除空队列: {}", queueName);
                     }
                 }
             }
         } catch (Exception e) {
-            log.error("清理空队列时发生错误", e);
+            throw new BaseException("清理空队列时发生错误");
         }
         log.info("每日空队列清理任务执行完毕");
     }

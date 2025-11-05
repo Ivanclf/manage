@@ -1,5 +1,6 @@
 package com.activity.manage.config;
 
+import com.activity.manage.utils.exception.BaseException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -118,13 +119,13 @@ public class RabbitMQConfig {
         try {
             rabbitAdmin.deleteQueue(queueName);
         } catch (Exception e) {
-            log.warn("删除注册队列 {} 时发生错误: {}", queueName, e.getMessage());
+            throw new BaseException("删除注册队列" + queueName + "时发生错误");
         }
         String checkinQueue = activityId + CHECKIN_QUEUE;
         try {
             rabbitAdmin.deleteQueue(checkinQueue);
         } catch (Exception e) {
-            log.warn("删除签到队列 {} 时发生错误: {}", checkinQueue, e.getMessage());
+            throw new BaseException("删除签到队列" + queueName + "时发生错误");
         }
         log.info("已尝试删除活动ID为 {} 的队列: {} , {}", activityId, queueName, checkinQueue);
     }

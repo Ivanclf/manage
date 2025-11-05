@@ -3,6 +3,8 @@ package com.activity.manage.service;
 import com.activity.manage.utils.AliOSSUtil;
 import com.activity.manage.utils.Md5Util;
 import com.activity.manage.utils.QRCodeMap;
+import com.activity.manage.utils.exception.IllegalParamException;
+import com.activity.manage.utils.exception.ResourcesException;
 import com.activity.manage.utils.result.Result;
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import com.github.kokorin.jaffree.ffmpeg.UrlInput;
@@ -36,8 +38,7 @@ public class PosterService {
 
             return Result.success(templateUrls);
         } catch (Exception e) {
-            log.error("获取模板图片失败", e);
-            return Result.error("获取模板图片失败");
+            throw new ResourcesException("模板图片");
         }
     }
 
@@ -56,7 +57,7 @@ public class PosterService {
             } else if (templateKey.startsWith("poster/checkin/") || qrCodeKey.startsWith("poster/checkin/")) {
                 route = POSTER_CHECKIN_ROUTE;
             } else {
-                throw new RuntimeException("传入的url不合法");
+                throw new IllegalParamException("url");
             }
             
             QRCodeMap posterMap = new QRCodeMap(route, activityId.toString(), QRCODE_FORMAT);
@@ -96,8 +97,7 @@ public class PosterService {
 
             return Result.success(posterUrl);
         } catch (Exception e) {
-            log.error("海报合成失败", e);
-            return Result.error("海报合成失败");
+            throw new ResourcesException("合成海报");
         }
     }
 
@@ -107,16 +107,12 @@ public class PosterService {
      * @return 对象键
      */
     private String extractKeyFromUrl(String url) {
-        try {
-            int index = url.indexOf(".com/");
-            if (index == -1) {
-                throw new IllegalArgumentException("URL格式不正确: " + url);
-            }
-            return url.substring(index + 5); // .com/ 长度为5
-        } catch (Exception e) {
-            log.error("解析URL失败: {}", url, e);
-            throw new RuntimeException("URL解析失败", e);
+
+        int index = url.indexOf(".com/");
+        if (index == -1) {
+            throw new IllegalParamException("url");
         }
+        return url.substring(index + 5); // .com/ 长度为5
     }
 
     public Result<List<String>> selectPostersById(Long activityId) {
@@ -141,8 +137,7 @@ public class PosterService {
 
             return Result.success(posterUrls);
         } catch (Exception e) {
-            log.error("获取活动海报失败", e);
-            return Result.error("获取活动海报失败");
+            throw new ResourcesException("海报");
         }
     }
 }

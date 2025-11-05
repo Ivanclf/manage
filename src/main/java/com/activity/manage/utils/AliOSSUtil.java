@@ -1,6 +1,9 @@
 package com.activity.manage.utils;
 
 import com.activity.manage.config.AliOssConfig;
+import com.activity.manage.utils.exception.BaseException;
+import com.activity.manage.utils.exception.NullParamException;
+import com.activity.manage.utils.exception.ResourcesException;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.model.*;
@@ -34,8 +37,7 @@ public class AliOSSUtil {
             );
             log.info("初始化 AliOSS 客户端，endpoint={}, bucket={}", aliOssConfig.getEndpoint(), aliOssConfig.getBucketName());
         } catch (Exception e) {
-            log.error("初始化 AliOSS 客户端失败", e);
-            throw new RuntimeException(e);
+            throw new BaseException("初始化 AliOSS 客户端失败");
         }
     }
 
@@ -44,9 +46,9 @@ public class AliOSSUtil {
         if (ossClient != null) {
             try {
                 ossClient.shutdown();
-                log.info("AliOSS客户端已成功关闭");
+                log.info("AliOSS 客户端已成功关闭");
             } catch (Exception e) {
-                log.warn("关闭 AliOSS 客户端时发生错误: {}", e.getMessage());
+                throw new BaseException("AliOSS 客户端关闭失败");
             }
         }
     }
@@ -60,11 +62,11 @@ public class AliOSSUtil {
     public String upload(byte[] bytes, QRCodeMap QRCodeMap) {
         if (bytes == null || bytes.length == 0) {
             log.warn("byte为空");
-            throw new RuntimeException("byte为空");
+            throw new NullParamException();
         }
         if(QRCodeMap == null || QRCodeMap.getQRCodeMap().isEmpty()) {
             log.warn("参数为空");
-            throw new RuntimeException("参数为空");
+            throw new NullParamException();
         }
 
         Map<String, String> map = QRCodeMap.getQRCodeMap();
@@ -86,15 +88,14 @@ public class AliOSSUtil {
                     meta.setContentType("image/png");
                 }
                 default -> {
-                    log.error("传输的文件格式错误");
+                    throw new BaseException("传输的文件格式错误");
                 }
             }
             ossClient.putObject(bucket, key, is, meta);
             log.info("上传二维码到 OSS 完成: {}", key);
             return generatePresignedUrl(key, 3600);
         } catch (Exception e) {
-            log.error("上传二维码到 OSS 失败", e);
-            throw new RuntimeException(e);
+            throw new BaseException("上传二维码到 OSS 失败");
         }
     }
 
@@ -119,10 +120,9 @@ public class AliOSSUtil {
             URL url = ossClient.generatePresignedUrl(bucket, key, expiration);
             return url.toString();
         } catch (Exception e) {
-            log.error("生成预签名 URL 失败", e);
-            // 回退为公开 URL（如果 endpoint/bucket 配置允许）
-            return generateUrl(key);
+            throw new ResourcesException("url");
         }
+
     }
 
     /**
@@ -133,13 +133,11 @@ public class AliOSSUtil {
     public byte[] getImage(String objectKey) {
         try {
             if(objectKey == null) {
-                log.warn("获取oss的对象键不能为空");
-                throw new RuntimeException("获取oss的对象键不能为空");
+                throw new NullParamException();
             }
             String bucket = aliOssConfig.getBucketName();
             if(!ossClient.doesObjectExist(bucket, objectKey)) {
-                log.warn("图片不存在");
-                throw new RuntimeException("图片不存在");
+                throw new ResourcesException("图片");
             }
             // 获取图片流
             OSSObject ossObject = ossClient.getObject(bucket, objectKey);
@@ -148,8 +146,7 @@ public class AliOSSUtil {
             log.info("从OSS获取图片成功，对象键: {}", objectKey);
             return bytes;
         } catch (Exception e) {
-            log.error("从OSS获取图片失败", e);
-            throw new RuntimeException("从OSS获取图片失败", e);
+            throw new ResourcesException("图片");
         }
     }
 
@@ -174,8 +171,7 @@ public class AliOSSUtil {
             log.info("列出路径 {} 下的对象共 {} 个", prefix, objectKeys.size());
             return objectKeys;
         } catch (Exception e) {
-            log.error("列出对象失败，prefix: {}", prefix, e);
-            throw new RuntimeException("列出对象失败", e);
+            throw new ResourcesException("模板");
         }
     }
 

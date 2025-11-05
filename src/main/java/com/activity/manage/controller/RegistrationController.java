@@ -7,6 +7,8 @@ import com.activity.manage.pojo.vo.Activity2RegisterVO;
 import com.activity.manage.service.QRCodeService;
 import com.activity.manage.service.RegistrationService;
 import com.activity.manage.utils.RegexUtil;
+import com.activity.manage.utils.exception.IllegalParamException;
+import com.activity.manage.utils.exception.NullParamException;
 import com.activity.manage.utils.result.Result;
 import com.github.pagehelper.PageInfo;
 import com.google.zxing.WriterException;
@@ -72,7 +74,7 @@ public class RegistrationController {
     @PostMapping
     public Result registration(@RequestBody RegistrationDTO registrationDTO) {
         if(!RegexUtil.isPhoneValid(registrationDTO.getPhone())) {
-            return Result.error("输入的电话号不正确");
+            throw new IllegalParamException("手机号");
         }
         return registrationService.registration(registrationDTO);
     }
@@ -89,7 +91,7 @@ public class RegistrationController {
             @RequestParam(defaultValue = "10") int pageSize
     ) {
         if(!RegexUtil.isPhoneValid(phone)) {
-            return Result.error("错误的手机号格式");
+            throw new IllegalParamException("手机号");
         }
         return registrationService.searchActivitiesByPhone(phone, pageNum, pageSize);
     }
@@ -97,7 +99,7 @@ public class RegistrationController {
     @PostMapping("/checkin")
     public Result checkinConfirm(@RequestBody CheckinDTO checkinDTO) {
         if(ObjectUtil.hasEmpty(checkinDTO.getId(), checkinDTO.getPhone(), checkinDTO.getLatitude(), checkinDTO.getLongitude())) {
-            return Result.error("未提交完整数据");
+            throw new NullParamException();
         }
         return registrationService.checkinConfirm(checkinDTO);
     }

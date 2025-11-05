@@ -8,6 +8,10 @@ import com.activity.manage.pojo.dto.RegistrationDTO;
 import com.activity.manage.pojo.entity.Activity;
 import com.activity.manage.pojo.entity.Registration;
 import com.activity.manage.pojo.vo.Activity2RegisterVO;
+import com.activity.manage.utils.exception.ActivityNotFoundException;
+import com.activity.manage.utils.exception.BaseException;
+import com.activity.manage.utils.exception.IllegalParamException;
+import com.activity.manage.utils.exception.OutOfBoundException;
 import com.activity.manage.utils.result.Result;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -63,13 +67,13 @@ public class RegistrationService {
         );
         switch (result.intValue()) {
             case 1 -> {
-                return Result.error("不在报名时间内");
+                throw new OutOfBoundException("报名时间");
             }
             case 2 -> {
-                return Result.error("名额不足");
+                throw new BaseException("名额不足");
             }
             case 3 -> {
-                return Result.error("不能重复报名");
+                throw new BaseException("不能再次报名");
             }
             default -> {
                 // 报名成功，返回正确结果，再放入RabbitMQ，异步写入数据库
@@ -98,7 +102,7 @@ public class RegistrationService {
         String phone = checkinDTO.getPhone();
         Boolean isMember = stringRedisTemplate.opsForSet().isMember(key, phone);
         if(isMember == null || !isMember) {
-            return Result.error("该用户没有该活动的报名信息");
+            throw new IllegalParamException("用户");
         }
 
         // 获取坐标信息进行匹配
@@ -112,15 +116,15 @@ public class RegistrationService {
                             .distance(CHECKIN_LOCATION_KEY, activityId.toString(), "temp"))
                     .getValue();
         } catch (Exception e) {
-            return Result.error("活动尚未开始");
+            throw new OutOfBoundException("活动时间");
         }
 
         if (distance == null) {
-            return Result.error("活动尚未开始");
+            throw new OutOfBoundException("活动时间");
         }
         
         if (distance > 0.1) {
-            return Result.error("不在签到范围内");
+            throw new OutOfBoundException("签到范围");
         }
         stringRedisTemplate.opsForGeo().remove(CHECKIN_LOCATION_KEY, "temp");
         // 将签到信息发送到对应队列，异步处理
@@ -141,7 +145,7 @@ public class RegistrationService {
             registration.setCheckin(1);
             registrationMapper.checkin(registration);
         } catch (Exception e) {
-            log.error("处理签到消息时发生错误: {}", e.getMessage(), e);
+            throw new BaseException("签到失败");
         }
     }
 
@@ -163,6 +167,8 @@ public class RegistrationService {
                 Activity2RegisterVO a = BeanUtil.copyProperties(activity, Activity2RegisterVO.class);
                 activity2RegisterVOList.add(a);
             }
+        } else {
+            throw new ActivityNotFoundException();
         }
         PageInfo<Activity2RegisterVO> pageInfo = new PageInfo<>(activity2RegisterVOList);
         return Result.success(pageInfo);

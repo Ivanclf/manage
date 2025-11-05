@@ -1,5 +1,7 @@
 package com.activity.manage.utils;
 
+import com.activity.manage.utils.exception.BaseException;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -24,7 +26,7 @@ public class Md5Util {
             }
             return sb.toString();
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("MD5 算法不可用", e);
+            throw new BaseException("MD5 算法不可用");
         }
     }
 

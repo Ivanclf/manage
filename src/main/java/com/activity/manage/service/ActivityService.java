@@ -8,6 +8,9 @@ import com.activity.manage.pojo.entity.Activity;
 import com.activity.manage.utils.AdminHolder;
 import com.activity.manage.utils.AliOSSUtil;
 import com.activity.manage.utils.constant.ActivityConstant;
+import com.activity.manage.utils.exception.ActivityNotFoundException;
+import com.activity.manage.utils.exception.AdminTokenExpiredException;
+import com.activity.manage.utils.exception.BaseException;
 import com.activity.manage.utils.result.Result;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -42,7 +45,7 @@ public class ActivityService {
         // 1. 从 ThreadLocal 获取当前管理员
         AdministratorDTO admin = AdminHolder.getAdmin();
         if (admin == null) {
-            return Result.error("未登录或认证失败");
+            throw new AdminTokenExpiredException();
         }
 
         // 2. DTO 转换为 Entity
@@ -58,7 +61,7 @@ public class ActivityService {
         // 4. 插入数据库
         activityMapper.insert(activity);
 
-        // 5. 返回活动ID (已通过 useGeneratedKeys 注入到 activity 对象中)
+        // 5. 返回活动ID
         return Result.success(activity.getId());
     }
 
@@ -84,6 +87,10 @@ public class ActivityService {
                     .toList();
         }
 
+        if(list.isEmpty()) {
+            throw new ActivityNotFoundException();
+        }
+
         // 4. 封装分页结果
         PageInfo<Activity> pageInfo = new PageInfo<>(list);
         return Result.success(pageInfo);
@@ -95,7 +102,7 @@ public class ActivityService {
     public Result<Activity> getActivityById(Long id) {
         Activity activity = activityMapper.selectById(id);
         if (activity == null) {
-            return Result.error("活动不存在");
+            throw new ActivityNotFoundException();
         }
         return Result.success(activity);
     }
@@ -108,13 +115,13 @@ public class ActivityService {
         // 1. 检查活动是否存在
         Activity dbActivity = activityMapper.selectById(id);
         if (dbActivity == null) {
-            return Result.error("活动不存在");
+            throw new ActivityNotFoundException();
         }
 
         // 2. 检查权限 (允许所有管理员修改)
         AdministratorDTO admin = AdminHolder.getAdmin();
         if (admin == null) {
-            return Result.error("未登录或认证失败");
+            throw new AdminTokenExpiredException();
         }
 
         // 3. DTO 转换为 Entity
@@ -142,7 +149,7 @@ public class ActivityService {
         // 1. 检查活动是否存在
         Activity dbActivity = activityMapper.selectById(id);
         if (dbActivity == null) {
-            return Result.error("活动不存在");
+            throw new ActivityNotFoundException();
         }
         // 2. 执行删除
         activityMapper.deleteById(id);
@@ -168,7 +175,7 @@ public class ActivityService {
                     log.info("已删除活动 {} 的二维码: {}", id, objectKey);
                 }
             } catch (Exception e) {
-                log.warn("删除活动 {} 的二维码失败: {}", id, e.getMessage());
+                throw new BaseException("删除活动 " + id + " 的二维码失败");
             }
         }
 
@@ -202,8 +209,7 @@ public class ActivityService {
             
             return path;
         } catch (Exception e) {
-            log.warn("解析二维码URL失败: {}", qrCodeUrl, e);
-            return null;
+            throw new BaseException("解析二维码URL失败: " + qrCodeUrl);
         }
     }
     
