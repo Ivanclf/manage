@@ -23,19 +23,22 @@ import static com.activity.manage.utils.constant.RedisConstant.REGISTRATION_ACTI
 @Configuration
 public class RabbitMQConfig {
 
-    @Bean
-    public RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory) {
-        return new RabbitAdmin(connectionFactory);
-    }
-
     @Autowired
-    private RabbitAdmin rabbitAdmin;
+    private ConnectionFactory connectionFactory;
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+
+    private RabbitAdmin rabbitAdmin;
 
     // 存储当前所有有效的 activityId
     private final Set<Long> registrationActivityIds = new HashSet<>();
     private final Set<Long> checkinActivityIds = new HashSet<>();
+
+    @Bean
+    public RabbitAdmin rabbitAdmin() {
+        this.rabbitAdmin = new RabbitAdmin(connectionFactory);
+        return this.rabbitAdmin;
+    }
 
     /**
      * 注册一个新的活动ID，自动创建对应的队列
