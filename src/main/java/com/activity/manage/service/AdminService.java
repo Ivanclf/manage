@@ -60,7 +60,7 @@ public class AdminService {
         AdministratorDTO administratorDTO = BeanUtil.copyProperties(administrator, AdministratorDTO.class);
         Map<String, Object> adminMap = BeanUtil.beanToMap(administratorDTO, new HashMap<>(),
                 CopyOptions.create().setIgnoreNullValue(true).setFieldValueEditor(
-                        (fieldName, fieldValue) -> fieldValue.toString()));
+                        (fieldName, fieldValue) -> fieldValue == null ? null : fieldValue.toString()));
         stringRedisTemplate.opsForHash().putAll(tokenKey, adminMap);
         stringRedisTemplate.expire(tokenKey, LOGIN_CODE_TTL, TimeUnit.MINUTES);
         log.info("用户 " + token + " 登录成功");
@@ -114,7 +114,7 @@ public class AdminService {
         // 写回redis
         Map<String, Object> adminMap = BeanUtil.beanToMap(administratorDTO, new HashMap<>(),
                 CopyOptions.create().setIgnoreNullValue(true).setFieldValueEditor(
-                        (fieldName, fieldValue) -> fieldValue.toString()));
+                        (fieldName, fieldValue) -> fieldValue == null ? null : fieldValue.toString()));
         stringRedisTemplate.opsForHash().putAll(token, adminMap);
     }
 }
