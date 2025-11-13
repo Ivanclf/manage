@@ -4,11 +4,11 @@
 <mapper namespace="com.activity.manage.mapper.ActivityMapper">
 
     <insert id="insert" parameterType="com.activity.manage.pojo.entity.Activity" useGeneratedKeys="true" keyProperty="id">
-        insert into activity (activity_name, activity_description, status, latitude, longitude, location,
+        insert into activity (id, activity_name, activity_description, status, latitude, longitude, location,
         qr_code_oss_url, link, registration_start, registration_end, activity_start,
         activity_end, release_time, creator_id, create_time, update_time,
         max_participants, current_participants)
-        values (#{activityName}, #{activityDescription}, #{status}, #{latitude}, #{longitude}, #{location},
+        values (#{id}, #{activityName}, #{activityDescription}, #{status}, #{latitude}, #{longitude}, #{location},
         #{qrCodeOssUrl}, #{link}, #{registrationStart}, #{registrationEnd}, #{activityStart},
         #{activityEnd}, #{releaseTime}, #{creatorId}, #{createTime}, #{updateTime},
         #{maxParticipants}, #{currentParticipants})

@@ -2,10 +2,7 @@ package com.activity.manage;
 
 import com.activity.manage.mapper.AdminMapper;
 import com.activity.manage.pojo.entity.Administrator;
-import com.activity.manage.utils.AliOSSUtil;
-import com.activity.manage.utils.Md5Util;
-import com.activity.manage.utils.QRCodeMap;
-import com.activity.manage.utils.QRCodeUtil;
+import com.activity.manage.utils.*;
 import com.activity.manage.utils.result.Result;
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import com.github.kokorin.jaffree.ffmpeg.FFmpegResult;

@@ -7,6 +7,7 @@ import com.activity.manage.pojo.dto.AdministratorDTO;
 import com.activity.manage.pojo.entity.Activity;
 import com.activity.manage.utils.AdminHolder;
 import com.activity.manage.utils.AliOSSUtil;
+import com.activity.manage.utils.SnowFlakeGenerator;
 import com.activity.manage.utils.constant.ActivityConstant;
 import com.activity.manage.utils.exception.ActivityNotFoundException;
 import com.activity.manage.utils.exception.AdminTokenExpiredException;
@@ -52,6 +53,7 @@ public class ActivityService {
         Activity activity = BeanUtil.copyProperties(activityDTO, Activity.class);
 
         // 3. 补全业务字段
+        activity.setId(SnowFlakeGenerator.generateId());
         activity.setCreatorId(admin.getId());
         activity.setCreateTime(LocalDateTime.now());
         activity.setUpdateTime(LocalDateTime.now());
