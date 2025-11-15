@@ -80,7 +80,7 @@
                 and id = #{id}
             </if>
             <if test="activityName != null and activityName != ''">
-                and activityName like concat('%' #{activityName}, '%')
+                and activityName like concat('%', #{activityName}, '%')
             </if>
             <if test="status != null">
                 and status = #{status}

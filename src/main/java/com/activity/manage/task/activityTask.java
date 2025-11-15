@@ -65,6 +65,11 @@ public class activityTask {
                 String key = REGISTRATION_ACTIVITY_KEY + activityId;
                 String queue = activityId + REGISTRATION_QUEUE;
                 if(stringRedisTemplate.opsForValue().get(key) == null) {
+                    // 检查活动的registrationEnd是否为null
+                    if (activity.getRegistrationEnd() == null) {
+                        log.warn("活动 {} 的 registrationEnd 为 null，跳过处理", activityId);
+                        continue;
+                    }
                     Duration duration = Duration.between(now, activity.getRegistrationEnd());
                     // 存入用户数据，分为存储最大报名人数的字符串和用户手机号哈希
                     stringRedisTemplate.opsForValue().set(key, activity.getMaxParticipants().toString(), duration);
@@ -87,6 +92,11 @@ public class activityTask {
                 Long activityId = activity.getId();
                 String queue = activityId + CHECKIN_QUEUE;
                 if(stringRedisTemplate.opsForGeo().position(CHECKIN_LOCATION_KEY, activityId.toString()) == null) {
+                    // 检查活动的activityEnd是否为null
+                    if (activity.getActivityEnd() == null) {
+                        log.warn("活动 {} 的 activityEnd 为 null，跳过处理", activityId);
+                        continue;
+                    }
                     // 准备lua脚本参数
                     Duration duration = Duration.between(now, activity.getActivityEnd());
                     String userKey = CHECKIN_USER_KEY + activityId;
@@ -99,8 +109,8 @@ public class activityTask {
                     List<String> args = new ArrayList<>();
                     args.add(activityId.toString());
                     args.add(String.valueOf(duration.getSeconds()));
-                    args.add(activity.getLatitude().toString());
-                    args.add(activity.getLongitude().toString());
+                    args.add(activity.getLatitude() != null ? activity.getLatitude().toString() : "0");
+                    args.add(activity.getLongitude() != null ? activity.getLongitude().toString() : "0");
                     args.addAll(phoneList);
 
                     // 执行lua脚本
