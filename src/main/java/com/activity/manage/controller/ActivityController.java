@@ -90,7 +90,7 @@ public class ActivityController {
      * 接口文档: GET /activity/{id}/qrcode
      */
 
-    @GetMapping(value = "/{id}/qrcode", produces = MediaType.IMAGE_PNG_VALUE)
+    @GetMapping(value = "/{id}/qrcode")
     public Result<String> getQRCode(@PathVariable("id") Long id,
                                     @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int width,
                                     @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int height) throws WriterException, IOException {

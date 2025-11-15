@@ -41,7 +41,7 @@ public class RegistrationController {
      * @throws WriterException
      * @throws IOException
      */
-    @GetMapping(value = "/{id}/registration/qrcode", produces = MediaType.IMAGE_PNG_VALUE)
+    @GetMapping(value = "/{id}/registration/qrcode")
     public Result<String> getRegistrationQRCode(@PathVariable("id") Long id,
                                                 @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int width,
                                                 @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int height) throws WriterException, IOException {
@@ -58,7 +58,7 @@ public class RegistrationController {
      * @throws WriterException
      * @throws IOException
      */
-    @GetMapping(value = "/{id}/checkin/qrcode", produces = MediaType.IMAGE_PNG_VALUE)
+    @GetMapping(value = "/{id}/checkin/qrcode")
     public Result<String> getCheckinQRCode(@PathVariable("id") Long id,
                                             @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int width,
                                             @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int height) throws WriterException, IOException {
