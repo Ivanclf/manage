@@ -10,7 +10,7 @@ if(remain == false) then
     return 1
 end
 -- 判断是否还有名额
-if(tonumber(remain <= 0)) then
+if(tonumber(remain) <= 0) then
     return 2
 end
 
