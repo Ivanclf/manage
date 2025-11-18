@@ -117,7 +117,7 @@
     
     <select id="selectByIdBatch" resultType="com.activity.manage.pojo.entity.Activity">
         select * from activity where id in
-            <foreach collection="ids" separator="," item="id" open="(" close=")">
+            <foreach collection="list" separator="," item="id" open="(" close=")">
                 #{id}
             </foreach>
     </select>

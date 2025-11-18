@@ -24,6 +24,7 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ import static com.activity.manage.utils.constant.RabbitMQConstant.CHECKIN_QUEUE;
 import static com.activity.manage.utils.constant.RabbitMQConstant.REGISTRATION_QUEUE;
 import static com.activity.manage.utils.constant.RedisConstant.CHECKIN_LOCATION_KEY;
 import static com.activity.manage.utils.constant.RedisConstant.CHECKIN_USER_KEY;
+import static com.activity.manage.utils.constant.RedisConstant.REGISTRATION_REGISTRATOR_KEY;
 
 @Service
 @Slf4j
@@ -55,6 +57,7 @@ public class RegistrationService {
         REGISTRATION_SCRIPT.setResultType(Long.class);
     }
 
+    @Transactional
     public Result registration(RegistrationDTO registrationDTO) {
         Long activityId = registrationDTO.getActivityId();
         String phone = registrationDTO.getPhone();
@@ -78,6 +81,7 @@ public class RegistrationService {
             default -> {
                 // 报名成功，返回正确结果，再放入RabbitMQ，异步写入数据库
                 String queue = activityId + REGISTRATION_QUEUE;
+                stringRedisTemplate.opsForSet().add(REGISTRATION_REGISTRATOR_KEY, phone);
                 rabbitTemplate.convertAndSend(queue, registrationDTO);
                 return Result.success();
             }
@@ -96,6 +100,7 @@ public class RegistrationService {
         registrationMapper.insert(registration);
     }
 
+    @Transactional
     public Result checkinConfirm(CheckinDTO checkinDTO) {
         Long activityId = checkinDTO.getId();
         String key = CHECKIN_USER_KEY + activityId.toString();
@@ -160,6 +165,9 @@ public class RegistrationService {
     public Result<PageInfo<Activity2RegisterVO>> searchActivitiesByPhone(String phone, int pageNum, int pageSize) {
         PageHelper.startPage(pageNum, pageSize);
         List<Long> activityIds = registrationMapper.selectActivityIdByPhone(phone);
+        if(activityIds == null || activityIds.isEmpty()) {
+            return Result.error("未查询到结果");
+        }
         List<Activity> activityList = activityMapper.selectByIdBatch(activityIds);
         List<Activity2RegisterVO> activity2RegisterVOList = new ArrayList<>();
         if(activityList != null) {

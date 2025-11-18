@@ -1,8 +1,8 @@
 local activityId = ARGV[1]
 local phone = ARGV[2]
 
-local activityKey = "REGISTRATION_ACTIVITY_KEY" .. activityId
-local registrationKey = "REGISTRATION_REGISTRATOR_KEY" .. activityId
+local activityKey = "registration:activity:" .. activityId
+local registrationKey = "registration:registrator:" .. activityId
 
 local remain = redis.call('get', activityKey)
 -- 判断键是否存在
