@@ -63,4 +63,8 @@
     <select id="selectActivityIdByPhone" resultType="java.lang.Long" parameterType="java.lang.String">
         select activity_id from registration where phone = #{phone}
     </select>
+
+    <delete id="delete">
+        delete from registration where id = #{activityId} and phone = #{phone}
+    </delete>
 </mapper>

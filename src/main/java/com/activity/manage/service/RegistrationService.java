@@ -5,6 +5,7 @@ import com.activity.manage.mapper.ActivityMapper;
 import com.activity.manage.mapper.RegistrationMapper;
 import com.activity.manage.pojo.dto.CheckinDTO;
 import com.activity.manage.pojo.dto.RegistrationDTO;
+import com.activity.manage.pojo.dto.RegistrationDeleteDTO;
 import com.activity.manage.pojo.entity.Activity;
 import com.activity.manage.pojo.entity.Registration;
 import com.activity.manage.pojo.vo.Activity2RegisterVO;
@@ -81,7 +82,7 @@ public class RegistrationService {
             default -> {
                 // 报名成功，返回正确结果，再放入RabbitMQ，异步写入数据库
                 String queue = activityId + REGISTRATION_QUEUE;
-                stringRedisTemplate.opsForSet().add(REGISTRATION_REGISTRATOR_KEY, phone);
+                stringRedisTemplate.opsForSet().add(REGISTRATION_REGISTRATOR_KEY + activityId, phone);
                 rabbitTemplate.convertAndSend(queue, registrationDTO);
                 return Result.success();
             }
@@ -180,5 +181,19 @@ public class RegistrationService {
         }
         PageInfo<Activity2RegisterVO> pageInfo = new PageInfo<>(activity2RegisterVOList);
         return Result.success(pageInfo);
+    }
+
+    /**
+     * 删除报名活动
+     * @param registrationDeleteDTO
+     * @return
+     */
+    public Result registrationDelete(RegistrationDeleteDTO registrationDeleteDTO) {
+        Long activityId = registrationDeleteDTO.getActivityId();
+        String phone = registrationDeleteDTO.getPhone();
+        stringRedisTemplate.opsForSet().remove(REGISTRATION_REGISTRATOR_KEY + activityId, phone);
+        // TODO 放到消息队列里删除
+        registrationMapper.delete(activityId, phone);
+        return Result.success();
     }
 }

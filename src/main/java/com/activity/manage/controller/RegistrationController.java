@@ -3,6 +3,7 @@ package com.activity.manage.controller;
 import cn.hutool.core.util.ObjectUtil;
 import com.activity.manage.pojo.dto.CheckinDTO;
 import com.activity.manage.pojo.dto.RegistrationDTO;
+import com.activity.manage.pojo.dto.RegistrationDeleteDTO;
 import com.activity.manage.pojo.vo.Activity2RegisterVO;
 import com.activity.manage.service.QRCodeService;
 import com.activity.manage.service.RegistrationService;
@@ -79,6 +80,11 @@ public class RegistrationController {
         return registrationService.registration(registrationDTO);
     }
 
+    @DeleteMapping
+    public Result registrationDelete(@RequestBody RegistrationDeleteDTO registrationDeleteDTO) {
+        return registrationService.registrationDelete(registrationDeleteDTO);
+    }
+
     /**
      * 用户查看报名信息
      * @param phone
@@ -96,6 +102,11 @@ public class RegistrationController {
         return registrationService.searchActivitiesByPhone(phone, pageNum, pageSize);
     }
 
+    /**
+     * 签到
+     * @param checkinDTO
+     * @return
+     */
     @PostMapping("/checkin")
     public Result checkinConfirm(@RequestBody CheckinDTO checkinDTO) {
         if(ObjectUtil.hasEmpty(checkinDTO.getId(), checkinDTO.getPhone(), checkinDTO.getLatitude(), checkinDTO.getLongitude())) {
