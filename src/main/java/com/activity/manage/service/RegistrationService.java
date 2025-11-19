@@ -150,7 +150,7 @@ public class RegistrationService {
             registration.setCheckin(1);
             registrationMapper.checkin(registration);
         } catch (Exception e) {
-            throw new BaseException("签到失败");
+            throw new BaseException("签到失败或重复签到");
         }
     }
 

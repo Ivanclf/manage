@@ -16,6 +16,6 @@ public class RegexUtil {
         if (StrUtil.isBlank(str)) {
             return true;
         }
-        return !str.matches(regex);
+        return str.matches(regex);
     }
 }
