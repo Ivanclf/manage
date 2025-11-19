@@ -18,7 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.activity.manage.utils.constant.ActivityConstant.REGISTERING;
 import static com.activity.manage.utils.constant.ActivityConstant.UNDERGOING;
@@ -63,7 +64,6 @@ public class activityTask {
             for(Activity activity : activityList) {
                 Long activityId = activity.getId();
                 String key = REGISTRATION_ACTIVITY_KEY + activityId;
-                String queue = activityId + REGISTRATION_QUEUE;
                 if(stringRedisTemplate.opsForValue().get(key) == null) {
                     // 检查活动的registrationEnd是否为null
                     if (activity.getRegistrationEnd() == null) {
@@ -73,8 +73,7 @@ public class activityTask {
                     Duration duration = Duration.between(now, activity.getRegistrationEnd());
                     // 存入用户数据，分为存储最大报名人数的字符串和用户手机号哈希
                     stringRedisTemplate.opsForValue().set(key, activity.getMaxParticipants().toString(), duration);
-                    rabbitMQConfig.addRegistrationActivityId(activityId);
-                    rabbitTemplate.convertAndSend(queue, "");
+                    rabbitTemplate.convertAndSend(REGISTRATION_QUEUE, "");
 
                     activity.setStatus(REGISTERING);
                     activityMapper.update(activity);
@@ -90,7 +89,6 @@ public class activityTask {
         if(activityList != null && !activityList.isEmpty()) {
             for(Activity activity : activityList) {
                 Long activityId = activity.getId();
-                String queue = activityId + CHECKIN_QUEUE;
                 if(stringRedisTemplate.opsForGeo().position(CHECKIN_LOCATION_KEY, activityId.toString()) == null) {
                     // 检查活动的activityEnd是否为null
                     if (activity.getActivityEnd() == null) {
@@ -122,8 +120,7 @@ public class activityTask {
                     if(result == null || result == 0L) {
                         throw new BaseException("lua脚本执行失败");
                     }
-                    rabbitMQConfig.addCheckinActivityId(activityId);
-                    rabbitTemplate.convertAndSend(queue, "");
+                    rabbitTemplate.convertAndSend(CHECKIN_QUEUE, "");
                     log.info("活动 {} 处理成功，应签到人数为 {}", activity.getId(), result);
 
                     activity.setStatus(UNDERGOING);
@@ -132,42 +129,5 @@ public class activityTask {
 
             }
         }
-    }
-
-    /**
-     * 清理空队列
-     */
-    @Scheduled(cron = "0 0 2 * * ?")
-    public void cleanEmptyQueues() {
-        log.info("定时执行每日空队列清理任务");
-        try {
-            // 获取所有活动队列名称（包含报名与签到队列）
-            Set<String> queueNames = new HashSet<>();
-            queueNames.addAll(rabbitMQConfig.getRegistrationQueues());
-            queueNames.addAll(rabbitMQConfig.getCheckinQueues());
-            for (String queueName : queueNames) {
-                // 获取队列信息
-                Properties queueInfo = rabbitAdmin.getQueueProperties(queueName);
-                if (queueInfo != null) {
-                    // 获取消息总数
-                    Long messageCount = (Long) queueInfo.get(RabbitAdmin.QUEUE_MESSAGE_COUNT);
-                    // 如果队列为空，则移除该活动ID（会自动删除队列）
-                    if (messageCount != null && messageCount == 0) {
-                        // 兼容两种后缀，先尝试去掉报名后缀
-                        String activityIdStr = queueName.replace(REGISTRATION_QUEUE, "");
-                        if (activityIdStr.equals(queueName)) {
-                            // 说明不是报名队列，尝试去掉签到后缀
-                            activityIdStr = queueName.replace(CHECKIN_QUEUE, "");
-                        }
-                        Long activityId = Long.parseLong(activityIdStr);
-                        rabbitMQConfig.removeActivityId(activityId);
-                        log.info("已删除空队列: {}", queueName);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            throw new BaseException("清理空队列时发生错误");
-        }
-        log.info("每日空队列清理任务执行完毕");
     }
 }

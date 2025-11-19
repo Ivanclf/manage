@@ -3,22 +3,20 @@ package com.activity.manage;
 import com.activity.manage.mapper.AdminMapper;
 import com.activity.manage.pojo.entity.Administrator;
 import com.activity.manage.utils.*;
-import com.activity.manage.utils.result.Result;
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import com.github.kokorin.jaffree.ffmpeg.FFmpegResult;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import static com.activity.manage.utils.constant.QRCodeConstant.*;
+
 
 @Slf4j
 @SpringBootTest
@@ -37,7 +35,7 @@ class ManageApplicationTests {
 
 	@Test
 	void mysqlConnected() {
-        Administrator administrator = adminMapper.loginById(new Administrator(1, "admin", "e10adc3949ba59abbe56e057f20f883e"));
+        Administrator administrator = adminMapper.loginById(new Administrator(1, "admin", "123456"));
         log.info("数据库链接成功，显示结果为 {}", administrator);
     }
 
@@ -55,12 +53,12 @@ class ManageApplicationTests {
      */
     @Test
     void rabbitConnected() {
-        String queue = "test";
+        String queue = ".test.queue";
         String value = "rabbitMQ-connection-complete";
         rabbitTemplate.convertAndSend(queue, value);
     }
 
-    @RabbitListener(queues = "test")
+    @RabbitListener(queues = ".test.queue")
     private void listenTest(String test) {
         log.info("接收到信息 {}", test);
     }

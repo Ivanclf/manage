@@ -11,7 +11,6 @@ import com.activity.manage.pojo.entity.Registration;
 import com.activity.manage.pojo.vo.Activity2RegisterVO;
 import com.activity.manage.utils.exception.ActivityNotFoundException;
 import com.activity.manage.utils.exception.BaseException;
-import com.activity.manage.utils.exception.IllegalParamException;
 import com.activity.manage.utils.exception.OutOfBoundException;
 import com.activity.manage.utils.result.Result;
 import com.github.pagehelper.PageHelper;
@@ -35,9 +34,7 @@ import java.util.Objects;
 
 import static com.activity.manage.utils.constant.RabbitMQConstant.CHECKIN_QUEUE;
 import static com.activity.manage.utils.constant.RabbitMQConstant.REGISTRATION_QUEUE;
-import static com.activity.manage.utils.constant.RedisConstant.CHECKIN_LOCATION_KEY;
-import static com.activity.manage.utils.constant.RedisConstant.CHECKIN_USER_KEY;
-import static com.activity.manage.utils.constant.RedisConstant.REGISTRATION_REGISTRATOR_KEY;
+import static com.activity.manage.utils.constant.RedisConstant.*;
 
 @Service
 @Slf4j
@@ -81,9 +78,8 @@ public class RegistrationService {
             }
             default -> {
                 // 报名成功，返回正确结果，再放入RabbitMQ，异步写入数据库
-                String queue = activityId + REGISTRATION_QUEUE;
                 stringRedisTemplate.opsForSet().add(REGISTRATION_REGISTRATOR_KEY + activityId, phone);
-                rabbitTemplate.convertAndSend(queue, registrationDTO);
+                rabbitTemplate.convertAndSend(REGISTRATION_QUEUE, registrationDTO);
                 return Result.success();
             }
         }
@@ -93,7 +89,7 @@ public class RegistrationService {
      * 若RabbitMQ中报名队列存在数据，则拉取并存进数据库里
      * @param registrationDTO
      */
-    @RabbitListener(queues = "#{@rabbitMQConfig.registrationQueues}")
+    @RabbitListener(queues = ".registration.queue")
     public void insert(RegistrationDTO registrationDTO) {
         Registration registration = BeanUtil.copyProperties(registrationDTO, Registration.class);
         registration.setRegistrationTime(LocalDateTime.now());
@@ -108,7 +104,7 @@ public class RegistrationService {
         String phone = checkinDTO.getPhone();
         Boolean isMember = stringRedisTemplate.opsForSet().isMember(key, phone);
         if(isMember == null || !isMember) {
-            throw new IllegalParamException("用户");
+            throw new BaseException("请进入正确的活动，并且不重复签到");
         }
 
         // 获取坐标信息进行匹配
@@ -133,9 +129,9 @@ public class RegistrationService {
             throw new OutOfBoundException("签到范围");
         }
         stringRedisTemplate.opsForGeo().remove(CHECKIN_LOCATION_KEY, "temp");
+        stringRedisTemplate.opsForSet().remove(key, phone);
         // 将签到信息发送到对应队列，异步处理
-        String queue = activityId + CHECKIN_QUEUE;
-        rabbitTemplate.convertAndSend(queue, checkinDTO);
+        rabbitTemplate.convertAndSend(CHECKIN_QUEUE, checkinDTO);
         return Result.success();
     }
 
@@ -143,7 +139,7 @@ public class RegistrationService {
      * 消费队列，执行数据库更新
      * @param checkinDTO
      */
-    @RabbitListener(queues = "#{@rabbitMQConfig.checkinQueues}")
+    @RabbitListener(queues = ".checkin.queue")
     public void doCheckin(CheckinDTO checkinDTO) {
         try {
             Registration registration = new Registration();
@@ -151,7 +147,7 @@ public class RegistrationService {
             registration.setCheckin(1);
             registrationMapper.checkin(registration);
         } catch (Exception e) {
-            throw new BaseException("签到失败或重复签到");
+            throw new BaseException("签到失败");
         }
     }
 
