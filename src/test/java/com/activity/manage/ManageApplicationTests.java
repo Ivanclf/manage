@@ -1,6 +1,7 @@
 package com.activity.manage;
 
 import com.activity.manage.mapper.AdminMapper;
+import com.activity.manage.pojo.dto.RegistrationDeleteDTO;
 import com.activity.manage.pojo.entity.Administrator;
 import com.activity.manage.utils.*;
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
@@ -54,12 +55,12 @@ class ManageApplicationTests {
     @Test
     void rabbitConnected() {
         String queue = ".test.queue";
-        String value = "rabbitMQ-connection-complete";
+        RegistrationDeleteDTO value = new RegistrationDeleteDTO(114514L, "11512345678");
         rabbitTemplate.convertAndSend(queue, value);
     }
 
     @RabbitListener(queues = ".test.queue")
-    private void listenTest(String test) {
+    private void listenTest(RegistrationDeleteDTO test) {
         log.info("接收到信息 {}", test);
     }
 
