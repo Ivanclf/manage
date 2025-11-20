@@ -74,7 +74,6 @@ public class activityTask {
                     Duration duration = Duration.between(now, activity.getRegistrationEnd());
                     // 存入用户数据，分为存储最大报名人数的字符串和用户手机号哈希
                     stringRedisTemplate.opsForValue().set(key, activity.getMaxParticipants().toString(), duration);
-                    rabbitTemplate.convertAndSend(REGISTRATION_QUEUE, "");
 
                     activity.setStatus(REGISTERING);
                     activityMapper.update(activity);
@@ -131,7 +130,6 @@ public class activityTask {
                     if(result == null || result == 0L) {
                         throw new BaseException("lua脚本执行失败");
                     }
-                    rabbitTemplate.convertAndSend(CHECKIN_QUEUE, "");
                     log.info("活动 {} 处理成功，应签到人数为 {}", activity.getId(), result);
 
                     activity.setStatus(UNDERGOING);
