@@ -104,7 +104,7 @@ public class RegistrationService {
         String phone = checkinDTO.getPhone();
         Boolean isMember = stringRedisTemplate.opsForSet().isMember(key, phone);
         if(isMember == null || !isMember) {
-            throw new BaseException("请进入正确的活动，并且不重复签到");
+            throw new BaseException("请进入正确的活动页面中");
         }
 
         // 获取坐标信息进行匹配
@@ -188,7 +188,6 @@ public class RegistrationService {
         Long activityId = registrationDeleteDTO.getActivityId();
         String phone = registrationDeleteDTO.getPhone();
         stringRedisTemplate.opsForSet().remove(REGISTRATION_REGISTRATOR_KEY + activityId, phone);
-        // TODO 放到消息队列里删除
         registrationMapper.delete(activityId, phone);
         return Result.success();
     }

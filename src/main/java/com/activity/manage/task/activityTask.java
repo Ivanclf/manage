@@ -10,6 +10,7 @@ import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.geo.Point;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -53,7 +54,7 @@ public class activityTask {
     /**
      * 处理到报名时间的活动
      */
-    @Scheduled(cron = "*/30 * * * * ?")
+    @Scheduled(cron = "*/10 * * * * ?")
     @Transactional
     public void processOnRegistrationTimeActivity() {
         LocalDateTime now = LocalDateTime.now();
@@ -89,7 +90,12 @@ public class activityTask {
         if(activityList != null && !activityList.isEmpty()) {
             for(Activity activity : activityList) {
                 Long activityId = activity.getId();
-                if(stringRedisTemplate.opsForGeo().position(CHECKIN_LOCATION_KEY, activityId.toString()) == null) {
+                List<Point> positionlist = stringRedisTemplate.opsForGeo().position(CHECKIN_LOCATION_KEY, activityId.toString());
+                if(positionlist == null) {
+                    continue;
+                }
+                Point point = positionlist.getFirst();
+                if(point == null) {
                     // 检查活动的activityEnd是否为null
                     if (activity.getActivityEnd() == null) {
                         log.warn("活动 {} 的 activityEnd 为 null，跳过处理", activityId);
@@ -100,9 +106,14 @@ public class activityTask {
                     String userKey = CHECKIN_USER_KEY + activityId;
                     List<String> phoneList = registrationMapper.selectPhoneByActivity(activityId);
 
+                    if(phoneList == null || phoneList.isEmpty()) {
+                        log.warn("该活动无人报名，不生成签到数据");
+                        continue;
+                    }
+
                     List<String> keys = new ArrayList<>();
                     keys.add(userKey);
-                    keys.add(CHECKIN_LOCATION_KEY);
+                    keys.add(CHECKIN_LOCATION_KEY + ":" + activityId);
 
                     List<String> args = new ArrayList<>();
                     args.add(activityId.toString());
@@ -115,7 +126,7 @@ public class activityTask {
                     Long result = stringRedisTemplate.execute(
                             CHECKIN_PROCESS_SCRIPT,
                             keys,
-                            args
+                            args.toArray()
                     );
                     if(result == null || result == 0L) {
                         throw new BaseException("lua脚本执行失败");
