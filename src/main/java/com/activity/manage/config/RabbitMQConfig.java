@@ -90,17 +90,4 @@ public class RabbitMQConfig {
         factory.setMessageConverter(jsonMessageConverter());
         return factory;
     }
-
-    /**
-     * 在容器销毁前执行的清理方法，用于删除RabbitMQ队列
-     */
-    @PreDestroy
-    public void rabbitAdminWithDeletePolicy() {
-        RabbitAdmin rabbitAdmin = new RabbitAdmin(connectionFactory);
-        rabbitAdmin.setIgnoreDeclarationExceptions(true);
-
-        rabbitAdmin.deleteQueue(REGISTRATION_QUEUE);
-        rabbitAdmin.deleteQueue(CHECKIN_QUEUE);
-        log.info("队列已成功清除");
-    }
 }

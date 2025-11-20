@@ -8,5 +8,5 @@ public class RedisConstant {
     public static final String REGISTRATION_REGISTRATOR_KEY = "registration:registrator:";
 
     public static final String CHECKIN_USER_KEY = "checkin:user:";
-    public static final String CHECKIN_LOCATION_KEY = "checkin:location";
+    public static final String CHECKIN_LOCATION_KEY = "checkin:location:";
 }

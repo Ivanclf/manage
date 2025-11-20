@@ -24,8 +24,6 @@ import java.util.List;
 
 import static com.activity.manage.utils.constant.ActivityConstant.REGISTERING;
 import static com.activity.manage.utils.constant.ActivityConstant.UNDERGOING;
-import static com.activity.manage.utils.constant.RabbitMQConstant.CHECKIN_QUEUE;
-import static com.activity.manage.utils.constant.RabbitMQConstant.REGISTRATION_QUEUE;
 import static com.activity.manage.utils.constant.RedisConstant.*;
 
 @Component
@@ -103,7 +101,7 @@ public class activityTask {
                     // 准备lua脚本参数
                     Duration duration = Duration.between(now, activity.getActivityEnd());
                     String userKey = CHECKIN_USER_KEY + activityId;
-                    List<String> phoneList = registrationMapper.selectPhoneByActivity(activityId);
+                    List<String> phoneList = registrationMapper.selectUncheck(activityId);
 
                     if(phoneList == null || phoneList.isEmpty()) {
                         log.warn("该活动无人报名，不生成签到数据");
@@ -112,7 +110,7 @@ public class activityTask {
 
                     List<String> keys = new ArrayList<>();
                     keys.add(userKey);
-                    keys.add(CHECKIN_LOCATION_KEY + ":" + activityId);
+                    keys.add(CHECKIN_LOCATION_KEY + activityId);
 
                     List<String> args = new ArrayList<>();
                     args.add(activityId.toString());

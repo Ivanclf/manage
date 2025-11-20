@@ -15,7 +15,7 @@ public class CheckinDTO {
     /**
      * 活动id
      */
-    private Long id;
+    private Long activityId;
     /**
      * 手机号
      */

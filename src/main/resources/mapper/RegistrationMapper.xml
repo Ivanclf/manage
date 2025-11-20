@@ -53,7 +53,7 @@
         </trim>
     </insert>
     <update id="checkin" parameterType="com.activity.manage.pojo.entity.Registration">
-        update registration set checkin = 1 where activity_id = #{id} and phone = #{phone}
+        update registration set checkin = 1 where activity_id = #{activityId} and phone = #{phone}
     </update>
 
     <select id="selectPhoneByActivity" resultType="java.lang.String">
@@ -67,4 +67,12 @@
     <delete id="delete">
         delete from registration where id = #{activityId} and phone = #{phone}
     </delete>
+
+    <select id="selectUncheck" resultType="java.lang.String">
+        select phone from registration where activity_id = #{id} and checkin = 0
+    </select>
+
+    <select id="isCheckin" resultType="java.lang.Integer">
+        select checkin from registration where id = #{activityId} and phone = #{phone}
+    </select>
 </mapper>

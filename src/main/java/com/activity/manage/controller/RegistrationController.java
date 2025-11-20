@@ -108,7 +108,7 @@ public class RegistrationController {
      */
     @PostMapping("/checkin")
     public Result checkinConfirm(@RequestBody CheckinDTO checkinDTO) {
-        if(ObjectUtil.hasEmpty(checkinDTO.getId(), checkinDTO.getPhone(), checkinDTO.getLatitude(), checkinDTO.getLongitude())) {
+        if(ObjectUtil.hasEmpty(checkinDTO.getActivityId(), checkinDTO.getPhone(), checkinDTO.getLatitude(), checkinDTO.getLongitude())) {
             throw new NullParamException();
         }
         return registrationService.checkinConfirm(checkinDTO);

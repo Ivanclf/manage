@@ -11,6 +11,7 @@ import com.activity.manage.pojo.entity.Registration;
 import com.activity.manage.pojo.vo.Activity2RegisterVO;
 import com.activity.manage.utils.exception.ActivityNotFoundException;
 import com.activity.manage.utils.exception.BaseException;
+import com.activity.manage.utils.exception.NullParamException;
 import com.activity.manage.utils.exception.OutOfBoundException;
 import com.activity.manage.utils.result.Result;
 import com.github.pagehelper.PageHelper;
@@ -32,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import static cn.hutool.core.bean.BeanUtil.copyProperties;
 import static com.activity.manage.utils.constant.RabbitMQConstant.CHECKIN_QUEUE;
 import static com.activity.manage.utils.constant.RabbitMQConstant.REGISTRATION_QUEUE;
 import static com.activity.manage.utils.constant.RedisConstant.*;
@@ -89,11 +91,11 @@ public class RegistrationService {
      * 若RabbitMQ中报名队列存在数据，则拉取并存进数据库里
      * @param registrationDTO
      */
-    @RabbitListener(queues = ".registration.queue")
-    public void insert(RegistrationDTO registrationDTO) {
+    @RabbitListener(queues = REGISTRATION_QUEUE)
+    public void doRegistration(RegistrationDTO registrationDTO) {
         if(registrationDTO == null)
-            return;
-        Registration registration = BeanUtil.copyProperties(registrationDTO, Registration.class);
+            throw new NullParamException();
+        Registration registration = copyProperties(registrationDTO, Registration.class);
         registration.setRegistrationTime(LocalDateTime.now());
         registration.setCheckin(0);
         registrationMapper.insert(registration);
@@ -101,8 +103,9 @@ public class RegistrationService {
 
     @Transactional
     public Result checkinConfirm(CheckinDTO checkinDTO) {
-        Long activityId = checkinDTO.getId();
+        Long activityId = checkinDTO.getActivityId();
         String key = CHECKIN_USER_KEY + activityId.toString();
+        String locationKey = CHECKIN_LOCATION_KEY + activityId;
         String phone = checkinDTO.getPhone();
         Boolean isMember = stringRedisTemplate.opsForSet().isMember(key, phone);
         if(isMember == null || !isMember) {
@@ -113,11 +116,11 @@ public class RegistrationService {
         double latitude = checkinDTO.getLatitude().doubleValue();
         double longitude = checkinDTO.getLongitude().doubleValue();
         Point point = new Point(longitude, latitude);
-        stringRedisTemplate.opsForGeo().add(CHECKIN_LOCATION_KEY, point, "temp");
+        stringRedisTemplate.opsForGeo().add(locationKey, point, "temp");
         Double distance;
         try {
             distance = Objects.requireNonNull(stringRedisTemplate.opsForGeo()
-                            .distance(CHECKIN_LOCATION_KEY, activityId.toString(), "temp"))
+                            .distance(locationKey, activityId.toString(), "temp"))
                     .getValue();
         } catch (Exception e) {
             throw new OutOfBoundException("活动时间");
@@ -130,7 +133,7 @@ public class RegistrationService {
         if (distance > 0.1) {
             throw new OutOfBoundException("签到范围");
         }
-        stringRedisTemplate.opsForGeo().remove(CHECKIN_LOCATION_KEY, "temp");
+        stringRedisTemplate.opsForGeo().remove(locationKey, "temp");
         stringRedisTemplate.opsForSet().remove(key, phone);
         // 将签到信息发送到对应队列，异步处理
         rabbitTemplate.convertAndSend(CHECKIN_QUEUE, checkinDTO);
@@ -141,18 +144,14 @@ public class RegistrationService {
      * 消费队列，执行数据库更新
      * @param checkinDTO
      */
-    @RabbitListener(queues = ".checkin.queue")
+    @RabbitListener(queues = CHECKIN_QUEUE)
     public void doCheckin(CheckinDTO checkinDTO) {
-        try {
-            if(checkinDTO == null)
-                return;
-            Registration registration = new Registration();
-            BeanUtil.copyProperties(checkinDTO, Registration.class);
-            registration.setCheckin(1);
-            registrationMapper.checkin(registration);
-        } catch (Exception e) {
-            throw new BaseException("签到失败");
-        }
+        if(checkinDTO == null)
+            throw new NullParamException();
+        if(registrationMapper.isCheckin(checkinDTO.getActivityId(), checkinDTO.getPhone()) == 1)
+            return;
+        Registration registration = BeanUtil.copyProperties(checkinDTO, Registration.class);
+        registrationMapper.checkin(registration);
     }
 
     /**
@@ -173,7 +172,7 @@ public class RegistrationService {
         List<Activity2RegisterVO> activity2RegisterVOList = new ArrayList<>();
         if(activityList != null) {
             for (Activity activity : activityList) {
-                Activity2RegisterVO a = BeanUtil.copyProperties(activity, Activity2RegisterVO.class);
+                Activity2RegisterVO a = copyProperties(activity, Activity2RegisterVO.class);
                 activity2RegisterVOList.add(a);
             }
         } else {

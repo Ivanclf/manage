@@ -17,4 +17,8 @@ public interface RegistrationMapper {
     List<Long> selectActivityIdByPhone(String phone);
 
     void delete(@Param("activityId") Long activityId, @Param("phone") String phone);
+
+    List<String> selectUncheck(Long activityId);
+
+    Integer isCheckin(@Param("activityId") Long activityId,@Param("phone") String phone);
 }
