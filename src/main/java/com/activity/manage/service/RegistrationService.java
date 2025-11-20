@@ -91,6 +91,8 @@ public class RegistrationService {
      */
     @RabbitListener(queues = ".registration.queue")
     public void insert(RegistrationDTO registrationDTO) {
+        if(registrationDTO == null)
+            return;
         Registration registration = BeanUtil.copyProperties(registrationDTO, Registration.class);
         registration.setRegistrationTime(LocalDateTime.now());
         registration.setCheckin(0);
@@ -142,6 +144,8 @@ public class RegistrationService {
     @RabbitListener(queues = ".checkin.queue")
     public void doCheckin(CheckinDTO checkinDTO) {
         try {
+            if(checkinDTO == null)
+                return;
             Registration registration = new Registration();
             BeanUtil.copyProperties(checkinDTO, Registration.class);
             registration.setCheckin(1);
