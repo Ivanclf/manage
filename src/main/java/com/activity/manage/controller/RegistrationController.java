@@ -1,7 +1,7 @@
 package com.activity.manage.controller;
 
 import cn.hutool.core.util.ObjectUtil;
-import com.activity.manage.pojo.dto.CheckinDTO;
+import com.activity.manage.pojo.dto.RegistrationCheckinDTO;
 import com.activity.manage.pojo.dto.RegistrationDTO;
 import com.activity.manage.pojo.dto.RegistrationDeleteDTO;
 import com.activity.manage.pojo.vo.Activity2RegisterVO;
@@ -103,14 +103,14 @@ public class RegistrationController {
 
     /**
      * 签到
-     * @param checkinDTO
+     * @param registrationCheckinDTO
      * @return
      */
     @PostMapping("/checkin")
-    public Result checkinConfirm(@RequestBody CheckinDTO checkinDTO) {
-        if(ObjectUtil.hasEmpty(checkinDTO.getActivityId(), checkinDTO.getPhone(), checkinDTO.getLatitude(), checkinDTO.getLongitude())) {
+    public Result checkinConfirm(@RequestBody RegistrationCheckinDTO registrationCheckinDTO) {
+        if(ObjectUtil.hasEmpty(registrationCheckinDTO.getActivityId(), registrationCheckinDTO.getPhone(), registrationCheckinDTO.getLatitude(), registrationCheckinDTO.getLongitude())) {
             throw new NullParamException();
         }
-        return registrationService.checkinConfirm(checkinDTO);
+        return registrationService.checkinConfirm(registrationCheckinDTO);
     }
 }

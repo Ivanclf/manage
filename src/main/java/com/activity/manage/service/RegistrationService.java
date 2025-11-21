@@ -3,7 +3,7 @@ package com.activity.manage.service;
 import cn.hutool.core.bean.BeanUtil;
 import com.activity.manage.mapper.ActivityMapper;
 import com.activity.manage.mapper.RegistrationMapper;
-import com.activity.manage.pojo.dto.CheckinDTO;
+import com.activity.manage.pojo.dto.RegistrationCheckinDTO;
 import com.activity.manage.pojo.dto.RegistrationDTO;
 import com.activity.manage.pojo.dto.RegistrationDeleteDTO;
 import com.activity.manage.pojo.entity.Activity;
@@ -102,19 +102,19 @@ public class RegistrationService {
     }
 
     @Transactional
-    public Result checkinConfirm(CheckinDTO checkinDTO) {
-        Long activityId = checkinDTO.getActivityId();
+    public Result checkinConfirm(RegistrationCheckinDTO registrationCheckinDTO) {
+        Long activityId = registrationCheckinDTO.getActivityId();
         String key = CHECKIN_USER_KEY + activityId.toString();
         String locationKey = CHECKIN_LOCATION_KEY + activityId;
-        String phone = checkinDTO.getPhone();
+        String phone = registrationCheckinDTO.getPhone();
         Boolean isMember = stringRedisTemplate.opsForSet().isMember(key, phone);
         if(isMember == null || !isMember) {
             throw new BaseException("请进入正确的活动页面中");
         }
 
         // 获取坐标信息进行匹配
-        double latitude = checkinDTO.getLatitude().doubleValue();
-        double longitude = checkinDTO.getLongitude().doubleValue();
+        double latitude = registrationCheckinDTO.getLatitude().doubleValue();
+        double longitude = registrationCheckinDTO.getLongitude().doubleValue();
         Point point = new Point(longitude, latitude);
         stringRedisTemplate.opsForGeo().add(locationKey, point, "temp");
         Double distance;
@@ -136,21 +136,21 @@ public class RegistrationService {
         stringRedisTemplate.opsForGeo().remove(locationKey, "temp");
         stringRedisTemplate.opsForSet().remove(key, phone);
         // 将签到信息发送到对应队列，异步处理
-        rabbitTemplate.convertAndSend(CHECKIN_QUEUE, checkinDTO);
+        rabbitTemplate.convertAndSend(CHECKIN_QUEUE, registrationCheckinDTO);
         return Result.success();
     }
 
     /**
      * 消费队列，执行数据库更新
-     * @param checkinDTO
+     * @param registrationCheckinDTO
      */
     @RabbitListener(queues = CHECKIN_QUEUE)
-    public void doCheckin(CheckinDTO checkinDTO) {
-        if(checkinDTO == null)
+    public void doCheckin(RegistrationCheckinDTO registrationCheckinDTO) {
+        if(registrationCheckinDTO == null)
             throw new NullParamException();
-        if(registrationMapper.isCheckin(checkinDTO.getActivityId(), checkinDTO.getPhone()) == 1)
+        if(registrationMapper.isCheckin(registrationCheckinDTO.getActivityId(), registrationCheckinDTO.getPhone()) == 1)
             return;
-        Registration registration = BeanUtil.copyProperties(checkinDTO, Registration.class);
+        Registration registration = BeanUtil.copyProperties(registrationCheckinDTO, Registration.class);
         registrationMapper.checkin(registration);
     }
 

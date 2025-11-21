@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CheckinDTO {
+public class RegistrationCheckinDTO {
     /**
      * 活动id
      */

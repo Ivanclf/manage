@@ -8,15 +8,9 @@ import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.DefaultJackson2JavaTypeMapper;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
-import org.springframework.amqp.support.converter.SimpleMessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import javax.annotation.PreDestroy;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import static com.activity.manage.utils.constant.RabbitMQConstant.CHECKIN_QUEUE;
 import static com.activity.manage.utils.constant.RabbitMQConstant.REGISTRATION_QUEUE;
