@@ -148,7 +148,11 @@ public class RegistrationService {
     public void doCheckin(RegistrationCheckinDTO registrationCheckinDTO) {
         if(registrationCheckinDTO == null)
             throw new NullParamException();
-        if(registrationMapper.isCheckin(registrationCheckinDTO.getActivityId(), registrationCheckinDTO.getPhone()) == 1)
+        Integer checkinStatus = registrationMapper.isCheckin(
+                registrationCheckinDTO.getActivityId(),
+                registrationCheckinDTO.getPhone());
+
+        if(checkinStatus != null && checkinStatus == 1)
             return;
         Registration registration = BeanUtil.copyProperties(registrationCheckinDTO, Registration.class);
         registrationMapper.checkin(registration);
