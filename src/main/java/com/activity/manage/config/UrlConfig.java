@@ -11,7 +11,7 @@ public class UrlConfig {
 
     private String activityPage;
 
-    private String restorationPage;
+    private String registrationPage;
 
     private String checkinPage;
 }

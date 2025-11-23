@@ -48,7 +48,7 @@ public class RegistrationController {
     public Result<String> getRegistrationQRCode(@PathVariable("id") Long id,
                                                 @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int width,
                                                 @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int height) throws WriterException, IOException {
-        String content = urlConfig.getActivityPage() + "registration/" + id.toString();
+        String content = urlConfig.getRegistrationPage() + "registration/" + id.toString();
         return qrCodeService.generateQRCodeWithUrl(content, width, height, QRCODE_REGISTRATION_ROUTE, id);
     }
 

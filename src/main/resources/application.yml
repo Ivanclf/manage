@@ -54,5 +54,5 @@ logging:
 
 manage:
   activity-page: ${manage.activity-page}
-  restoration-page: ${manage.restoration-page}
   checkin-page: ${manage.checkin-page}
+  registration-page: ${manage.restoration-page}
