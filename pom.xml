@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.activity</groupId>
 	<artifactId>manage</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>manage</name>
 	<description>高校学生活动全流程管理系统</description>
 	<url/>

@@ -10,6 +10,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Map;
 
+import static com.activity.manage.utils.constant.RedisConstant.LOGIN_ADMIN_KEY;
+
 /**
  * Token 相关工具方法
  */
@@ -42,25 +44,11 @@ public class TokenUtil {
         if (StrUtil.isBlank(token)) {
             return null;
         }
-        Map<Object, Object> adminMap = stringRedisTemplate.opsForHash().entries(token);
+        Map<Object, Object> adminMap = stringRedisTemplate.opsForHash().entries(LOGIN_ADMIN_KEY + token);
         if (adminMap == null || adminMap.isEmpty()) {
             return null;
         }
         AdministratorDTO administratorDTO = BeanUtil.fillBeanWithMap(adminMap, new AdministratorDTO(), false);
-        return administratorDTO;
-    }
-
-    /**
-     * 从请求中获取账户信息
-     * @param stringRedisTemplate
-     * @return administratorDTO
-     */
-    public static AdministratorDTO getAdminFromRequest(StringRedisTemplate stringRedisTemplate) {
-        String token = getTokenFromRequest();
-        AdministratorDTO administratorDTO = getAdminFromToken(token, stringRedisTemplate);
-        if (administratorDTO != null) {
-            AdminHolder.saveAdmin(administratorDTO);
-        }
         return administratorDTO;
     }
 

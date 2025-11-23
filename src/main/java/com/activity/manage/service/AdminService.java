@@ -57,7 +57,10 @@ public class AdminService {
         // 登录成功，获取token，放到redis中。redis的键为token，值为用户的id和账号
         String token = UUID.randomUUID().toString(true);
         String tokenKey = LOGIN_ADMIN_KEY + token;
-        AdministratorDTO administratorDTO = BeanUtil.copyProperties(administrator, AdministratorDTO.class);
+        AdministratorDTO administratorDTO = AdministratorDTO.builder()
+                .id(admin.getId())
+                .userName(admin.getUserName())
+                .build();
         Map<String, Object> adminMap = BeanUtil.beanToMap(administratorDTO, new HashMap<>(),
                 CopyOptions.create().setIgnoreNullValue(true).setFieldValueEditor(
                         (fieldName, fieldValue) -> fieldValue == null ? null : fieldValue.toString()));
@@ -85,7 +88,8 @@ public class AdminService {
     @Transactional
     public Result updatePassword(AdministratorPasswordDTO administratorPasswordDTO) {
         // 从redis中获取用户信息
-        AdministratorDTO administratorDTO = TokenUtil.getAdminFromRequest(stringRedisTemplate);
+        AdministratorDTO administratorDTO = TokenUtil.getAdminFromTokenAndSave(
+                TokenUtil.getTokenFromRequest(), stringRedisTemplate);
         Administrator administratorOld = BeanUtil.copyProperties(administratorDTO, Administrator.class);
         administratorOld.setUserPassword(administratorPasswordDTO.getOldPassword());
         // 查看旧密码有没有输入正确
@@ -116,5 +120,6 @@ public class AdminService {
                 CopyOptions.create().setIgnoreNullValue(true).setFieldValueEditor(
                         (fieldName, fieldValue) -> fieldValue == null ? null : fieldValue.toString()));
         stringRedisTemplate.opsForHash().putAll(token, adminMap);
+        TokenUtil.getAdminFromTokenAndSave(token, stringRedisTemplate);
     }
 }
