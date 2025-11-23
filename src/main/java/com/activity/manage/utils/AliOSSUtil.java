@@ -99,14 +99,6 @@ public class AliOSSUtil {
         }
     }
 
-    private String generateUrl(String key) {
-        // 备用：若需要公开 URL，可使用此方法；当前项目使用私有 bucket 的签名 URL
-        String endpoint = aliOssConfig.getEndpoint();
-        String bucket = aliOssConfig.getBucketName();
-        String cleanedEndpoint = endpoint.replaceFirst("^https?://", "");
-        return String.format(Locale.ROOT, "https://%s.%s/%s", bucket, cleanedEndpoint, key);
-    }
-
     /**
      * 为私有 Bucket 生成预签名 URL
      * @param key 对象 key

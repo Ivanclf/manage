@@ -77,6 +77,17 @@ class ManageApplicationTests {
         }
     }
 
+    @Test
+    void downloadQRCode() {
+        try {
+            byte[] result = aliOSSUtil.getImage(QRCODE_ACTIVITY_ROUTE);
+            java.nio.file.Files.write(java.nio.file.Paths.get("downloaded_qrcode.png"), result);
+            log.info("二维码已下载并保存为 downloaded_qrcode.png");
+        } catch (Exception e) {
+            log.error("下载二维码失败", e);
+        }
+    }
+
     /**
      * 测试ffmpeg是否能正常链接
      */

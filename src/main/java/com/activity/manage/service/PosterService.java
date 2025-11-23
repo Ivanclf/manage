@@ -1,5 +1,6 @@
 package com.activity.manage.service;
 
+import com.activity.manage.config.AliOssConfig;
 import com.activity.manage.utils.AliOSSUtil;
 import com.activity.manage.utils.Md5Util;
 import com.activity.manage.utils.QRCodeMap;
@@ -27,6 +28,9 @@ public class PosterService {
 
     @Autowired
     private AliOSSUtil aliOSSUtil;
+    
+    @Autowired
+    private AliOssConfig aliOssConfig;
 
     public Result<List<String>> selectAllTemplates() {
         try {
@@ -50,11 +54,11 @@ public class PosterService {
             String qrCodeKey = extractKeyFromUrl(qrCodeUrl);
             
             String route;
-            if (templateKey.startsWith("poster/activity/") || qrCodeKey.startsWith("poster/activity/")) {
+            if (qrCodeKey.startsWith("qrcodes/activity/")) {
                 route = POSTER_ACTIVITY_ROUTE;
-            } else if (templateKey.startsWith("poster/registration/") || qrCodeKey.startsWith("poster/registration/")) {
+            } else if (qrCodeKey.startsWith("qrcodes/registration/")) {
                 route = POSTER_REGISTRATION_ROUTE;
-            } else if (templateKey.startsWith("poster/checkin/") || qrCodeKey.startsWith("poster/checkin/")) {
+            } else if (qrCodeKey.startsWith("qrcodes/checkin/")) {
                 route = POSTER_CHECKIN_ROUTE;
             } else {
                 throw new IllegalParamException("url");
@@ -107,12 +111,43 @@ public class PosterService {
      * @return 对象键
      */
     private String extractKeyFromUrl(String url) {
+        try {
+            // 解析URL，提取对象键
+            String bucketName = aliOSSUtil.getBucketName();
+            String endpoint = aliOssConfig.getEndpoint().replaceFirst("^https?://", "");
 
-        int index = url.indexOf(".com/");
-        if (index == -1) {
+            // 处理虚拟主机样式URL (bucket.endpoint/key)
+            String host = bucketName + "." + endpoint;
+            int startIndex = url.indexOf(host);
+            if (startIndex != -1) {
+                startIndex += host.length() + 1; // +1 for the trailing slash
+            } else {
+                // 处理路径样式URL (endpoint/bucket/key)
+                int bucketIndex = url.indexOf("/" + bucketName + "/");
+                if (bucketIndex != -1) {
+                    startIndex = bucketIndex + bucketName.length() + 2; // +2 for the two slashes
+                } else {
+                    // 如果URL已经是对象键本身
+                    if (!url.contains("://")) {
+                        return url;
+                    }
+                    throw new IllegalParamException("url");
+                }
+            }
+
+            // 查找查询参数的开始位置（如果有）
+            int queryIndex = url.indexOf("?", startIndex);
+            if (queryIndex != -1) {
+                // 如果有查询参数，只取对象键部分
+                return url.substring(startIndex, queryIndex);
+            } else {
+                // 没有查询参数，直接截取到字符串末尾
+                return url.substring(startIndex);
+            }
+        } catch (Exception e) {
+            log.error("Error extracting key from URL: {}", url, e);
             throw new IllegalParamException("url");
         }
-        return url.substring(index + 5); // .com/ 长度为5
     }
 
     public Result<List<String>> selectPostersById(Long activityId) {

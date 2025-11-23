@@ -24,9 +24,9 @@ public class QRCodeConstant {
     /**
      * 组合图片路径
      */
-    public static final String POSTER_ACTIVITY_ROUTE = "/poster/activity/";
-    public static final String POSTER_REGISTRATION_ROUTE = "/poster/registration/";
-    public static final String POSTER_CHECKIN_ROUTE = "/poster/checkin/";
+    public static final String POSTER_ACTIVITY_ROUTE = "poster/activity/";
+    public static final String POSTER_REGISTRATION_ROUTE = "poster/registration/";
+    public static final String POSTER_CHECKIN_ROUTE = "poster/checkin/";
     /**
      * 二维码的图片格式
      */
