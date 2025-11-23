@@ -52,7 +52,7 @@ public class activityTask {
     /**
      * 处理到报名时间的活动
      */
-    @Scheduled(cron = "*/10 * * * * ?")
+    @Scheduled(cron = "1 * * * * ?")
     @Transactional
     public void processOnRegistrationTimeActivity() {
         LocalDateTime now = LocalDateTime.now();
