@@ -156,9 +156,9 @@ public class PosterService {
             List<String> keys = new ArrayList<>();
             
             // 构造特定活动的路径前缀
-            String activityPosterPrefix = POSTER_ACTIVITY_ROUTE.substring(1) + Md5Util.md5Str(activityId.toString()) + "/";
-            String registrationPosterPrefix = POSTER_REGISTRATION_ROUTE.substring(1) + Md5Util.md5Str(activityId.toString()) + "/";
-            String checkinPosterPrefix = POSTER_CHECKIN_ROUTE.substring(1) + Md5Util.md5Str(activityId.toString()) + "/";
+            String activityPosterPrefix = POSTER_ACTIVITY_ROUTE + Md5Util.md5Str(activityId.toString());
+            String registrationPosterPrefix = POSTER_REGISTRATION_ROUTE + Md5Util.md5Str(activityId.toString());
+            String checkinPosterPrefix = POSTER_CHECKIN_ROUTE + Md5Util.md5Str(activityId.toString());
             
             // 添加所有匹配的海报键
             keys.addAll(aliOSSUtil.listObjectsByPrefix(activityPosterPrefix));
