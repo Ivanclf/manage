@@ -51,3 +51,8 @@ aliyun:
 logging:
   level:
     com.activity.manage: debug
+
+manage:
+  activity-page: ${manage.activity-page}
+  restoration-page: ${manage.restoration-page}
+  checkin-page: ${manage.checkin-page}

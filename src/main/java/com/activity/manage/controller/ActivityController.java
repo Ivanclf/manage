@@ -1,5 +1,6 @@
 package com.activity.manage.controller;
 
+import com.activity.manage.config.UrlConfig;
 import com.activity.manage.mapper.ActivityMapper;
 import com.activity.manage.pojo.dto.ActivityDTO;
 import com.activity.manage.pojo.entity.Activity;
@@ -29,6 +30,8 @@ public class ActivityController {
     private ActivityService activityService;
     @Autowired
     private ActivityMapper activityMapper;
+    @Autowired
+    private UrlConfig urlConfig;
 
     /**
      * 1. 创建活动
@@ -93,7 +96,7 @@ public class ActivityController {
     public Result<String> getQRCode(@PathVariable("id") Long id,
                                     @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int width,
                                     @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int height) throws WriterException, IOException {
-        String content = ACTIVITY_PAGE + "activity/" + id;
+        String content = urlConfig.getActivityPage() + "activity/" + id;
         Result<String> result = qrCodeService.generateQRCodeWithUrl(content, width, height, QRCODE_ACTIVITY_ROUTE, id);
         
         // 更新数据库中活动的二维码URL

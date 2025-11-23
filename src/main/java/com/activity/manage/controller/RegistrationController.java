@@ -1,6 +1,7 @@
 package com.activity.manage.controller;
 
 import cn.hutool.core.util.ObjectUtil;
+import com.activity.manage.config.UrlConfig;
 import com.activity.manage.pojo.dto.RegistrationCheckinDTO;
 import com.activity.manage.pojo.dto.RegistrationDTO;
 import com.activity.manage.pojo.dto.RegistrationDeleteDTO;
@@ -31,6 +32,8 @@ public class RegistrationController {
     private QRCodeService qrCodeService;
     @Autowired
     private RegistrationService registrationService;
+    @Autowired
+    private UrlConfig urlConfig;
 
     /**
      * 生成活动报名二维码
@@ -45,7 +48,7 @@ public class RegistrationController {
     public Result<String> getRegistrationQRCode(@PathVariable("id") Long id,
                                                 @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int width,
                                                 @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int height) throws WriterException, IOException {
-        String content = REGISTRATION_PAGE;
+        String content = urlConfig.getActivityPage();
         return qrCodeService.generateQRCodeWithUrl(content, width, height, QRCODE_REGISTRATION_ROUTE, id);
     }
 
@@ -62,7 +65,7 @@ public class RegistrationController {
     public Result<String> getCheckinQRCode(@PathVariable("id") Long id,
                                             @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int width,
                                             @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int height) throws WriterException, IOException {
-        String content = CHECKIN_PAGE;
+        String content = urlConfig.getCheckinPage();
         return qrCodeService.generateQRCodeWithUrl(content, width, height, QRCODE_CHECKIN_ROUTE, id);
     }
 

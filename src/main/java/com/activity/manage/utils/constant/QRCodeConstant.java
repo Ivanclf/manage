@@ -1,12 +1,9 @@
 package com.activity.manage.utils.constant;
 
+import org.springframework.beans.factory.annotation.Value;
+
 public class QRCodeConstant {
-    /**
-     * 页面Url
-     */
-    public static final String ACTIVITY_PAGE = "http://localhost:8080/";
-    public static final String REGISTRATION_PAGE = "http://localhost:8080/";
-    public static final String CHECKIN_PAGE = "http://localhost:8080/";
+
     /**
      * 默认二维码大小
      */
