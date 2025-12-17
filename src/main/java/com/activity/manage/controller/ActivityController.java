@@ -96,7 +96,7 @@ public class ActivityController {
     public Result<String> getQRCode(@PathVariable("id") Long id,
                                     @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int width,
                                     @RequestParam(defaultValue = DEFAULT_SIZE) @Min(100) @Max(1000) int height) throws WriterException, IOException {
-        String content = urlConfig.getActivityPage() + "activity/" + id;
+        String content = urlConfig.getActivityPage() + "/activity/" + id;
         Result<String> result = qrCodeService.generateQRCodeWithUrl(content, width, height, QRCODE_ACTIVITY_ROUTE, id);
         
         // 更新数据库中活动的二维码URL

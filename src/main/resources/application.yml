@@ -51,6 +51,11 @@ aliyun:
 logging:
   level:
     com.activity.manage: debug
+  logback:
+    rollingpolicy:
+      max-file-size: 100MB
+      max-history: 7
+      total-size-cap: 500MB
 
 manage:
   activity-page: ${manage.activity-page}
