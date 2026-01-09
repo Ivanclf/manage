@@ -38,3 +38,17 @@
 ## 前端项目地址
 
 [https://github.com/564562333/xd-](https://github.com/564562333/xd-)
+
+## 结果展示
+
+后端在本地运行时（Redis 和 RabbitMQ 在服务器里）的结果
+
+![结果](./images/result.png)
+
+管理员页面概览
+
+![概览](./images/admin-dashboard.png)
+
+用户查询页面概览
+
+![概览](./images/user-dashboard.png)
